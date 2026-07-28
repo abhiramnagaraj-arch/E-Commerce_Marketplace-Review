@@ -36,7 +36,7 @@ Before running the database commands, you need to tell Rails your local PostgreS
      adapter: postgresql
      encoding: unicode
      username: postgres
-     password: YOUR_POSTGRES_PASSWORD_HERE
+     password: postgresql123 # <-- CHANGE THIS to your local PostgreSQL password
      host: localhost
      pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
    ```
