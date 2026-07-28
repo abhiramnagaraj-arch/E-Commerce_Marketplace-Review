@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= content_for(:title) || "Rediff Store — MVC E-Commerce Demo" %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body>
+    <header class="navbar">
+      <div class="nav-container">
+        <%= link_to root_path, class: "brand-logo" do %>
+          <span>⚡ Rediff Store</span>
+        <% end %>
+
+        <nav>
+          <ul class="nav-links">
+            <li><%= link_to "Home", root_path, class: "nav-link" %></li>
+            <li><%= link_to "Categories", categories_path, class: "nav-link" %></li>
+            <li><%= link_to "Products", products_path, class: "nav-link" %></li>
+            <li><%= link_to "Orders", orders_path, class: "nav-link" %></li>
+            <li>
+              <%= link_to cart_path, class: "cart-btn" do %>
+                <span>🛒 Cart</span>
+                <span class="cart-badge"><%= current_cart.cart_items.sum(:quantity) %></span>
+              <% end %>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main class="main-content">
+      <% if notice.present? %>
+        <div class="flash-notice">
+          <span>✅ <%= notice %></span>
+        </div>
+      <% end %>
+
+      <% if alert.present? %>
+        <div class="flash-alert">
+          <span>⚠️ <%= alert %></span>
+        </div>
+      <% end %>
+
+      <%= yield %>
+    </main>
+
+    <footer class="footer">
+      <div class="nav-container" style="justify-content: center;">
+        <p>Built for Rediff Internship Demo — Ruby on Rails MVC E-Commerce System</p>
+      </div>
+    </footer>
+  </body>
+</html>

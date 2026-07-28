@@ -1,0 +1,46 @@
+<div style="margin-bottom: 2rem;">
+  <h1 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 0.25rem;">📜 Order History</h1>
+  <p style="color: var(--text-muted);">View all past orders placed in the system</p>
+</div>
+
+<% if @orders.any? %>
+  <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+    <% @orders.each do |order| %>
+      <div class="cart-container" style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 0.4rem;">
+            <h3 style="font-size: 1.25rem; font-weight: 700;">Order #<%= order.id %></h3>
+            <span class="cart-badge" style="background: var(--primary-light); color: var(--primary);">
+              <%= order.status.upcase %>
+            </span>
+          </div>
+          <p style="color: var(--text-muted); font-size: 0.9rem;">
+            Customer: <strong><%= order.customer_name %></strong> (<%= order.customer_email %>) • Placed on <%= order.created_at.strftime("%b %d, %Y") %>
+          </p>
+          <div style="margin-top: 0.5rem; font-size: 0.95rem;">
+            <%= order.order_items.count %> items — 
+            <% order.order_items.each do |item| %>
+              <span style="display: inline-block; background: var(--background); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-right: 0.35rem;">
+                <%= item.product.title %> (x<%= item.quantity %>)
+              </span>
+            <% end %>
+          </div>
+        </div>
+
+        <div style="text-align: right;">
+          <div style="font-size: 1.4rem; font-weight: 700; color: var(--primary); margin-bottom: 0.5rem;">
+            ₹<%= number_with_precision(order.final_amount, precision: 2) %>
+          </div>
+          <%= link_to "View Details →", order, class: "btn btn-secondary btn-sm" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <div style="text-align: center; padding: 5rem 2rem; background: var(--surface); border-radius: var(--radius-lg); border: 1px dashed var(--border);">
+    <div style="font-size: 3.5rem; margin-bottom: 1rem;">📋</div>
+    <h3 style="margin-bottom: 0.5rem;">No orders have been placed yet</h3>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">When you complete checkout, your order history will appear here.</p>
+    <%= link_to "Browse Products", products_path, class: "btn btn-primary" %>
+  </div>
+<% end %>

@@ -1,0 +1,91 @@
+<div style="margin-bottom: 2rem;">
+  <h1 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 0.25rem;">📦 Secure Checkout</h1>
+  <p style="color: var(--text-muted);">Enter your delivery details to confirm your order</p>
+</div>
+
+<div style="display: grid; grid-template-columns: 3fr 2fr; gap: 2.5rem; align-items: start;">
+
+  <!-- Customer Details Form -->
+  <div class="cart-container">
+    <h3 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+      Shipping & Customer Information
+    </h3>
+
+    <%= form_with(model: @order, url: orders_path, method: :post) do |f| %>
+      <% if @order.errors.any? %>
+        <div class="flash-alert" style="flex-direction: column; align-items: flex-start;">
+          <h3 style="margin-bottom: 0.5rem;"><%= pluralize(@order.errors.count, "error") %> prohibited this order:</h3>
+          <ul>
+            <% @order.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div class="form-group">
+        <%= f.label :customer_name, "Full Name", class: "form-label" %>
+        <%= f.text_field :customer_name, class: "form-control", placeholder: "e.g., Sanja Sharma", required: true %>
+      </div>
+
+      <div class="form-group">
+        <%= f.label :customer_email, "Email Address", class: "form-label" %>
+        <%= f.email_field :customer_email, class: "form-control", placeholder: "e.g., sanja@example.com", required: true %>
+      </div>
+
+      <div class="form-group">
+        <%= f.label :customer_address, "Complete Delivery Address", class: "form-label" %>
+        <%= f.text_area :customer_address, rows: 4, class: "form-control", placeholder: "House No, Street, City, State, Pincode", required: true %>
+      </div>
+
+      <div style="margin-top: 2rem;">
+        <%= f.submit "✅ Place Order & Complete Checkout", class: "btn btn-primary", style: "width: 100%; padding: 1rem; font-size: 1.15rem;" %>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Order Items Summary Column -->
+  <div class="cart-container" style="position: sticky; top: 100px;">
+    <h3 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
+      Order Review (<%= @cart.cart_items.sum(:quantity) %> items)
+    </h3>
+
+    <div style="margin-bottom: 1.5rem;">
+      <% @cart.cart_items.each do |item| %>
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid var(--border);">
+          <div>
+            <strong><%= item.product.title %></strong>
+            <div style="font-size: 0.85rem; color: var(--text-muted);">Qty: <%= item.quantity %> × ₹<%= number_with_precision(item.product.price, precision: 2) %></div>
+          </div>
+          <span style="font-weight: 600;">₹<%= number_with_precision(item.total_price, precision: 2) %></span>
+        </div>
+      <% end %>
+    </div>
+
+    <% total = @cart.total_price %>
+    <% discount = @coupon ? @coupon.calculate_discount(total) : 0.0 %>
+    <% final = total - discount %>
+
+    <div class="summary-row">
+      <span>Subtotal</span>
+      <span>₹<%= number_with_precision(total, precision: 2) %></span>
+    </div>
+
+    <% if discount > 0 %>
+      <div class="summary-row" style="color: var(--success); font-weight: 600;">
+        <span>Promo Discount (<%= @coupon.code %>)</span>
+        <span>- ₹<%= number_with_precision(discount, precision: 2) %></span>
+      </div>
+    <% end %>
+
+    <div class="summary-row summary-total">
+      <span>Total Amount</span>
+      <span style="color: var(--primary);">₹<%= number_with_precision(final, precision: 2) %></span>
+    </div>
+
+    <div style="margin-top: 1.5rem; font-size: 0.85rem; color: var(--text-muted); text-align: center;">
+      🔒 100% Guaranteed Safe & Verified Demo Transaction
+    </div>
+  </div>
+
+</div>

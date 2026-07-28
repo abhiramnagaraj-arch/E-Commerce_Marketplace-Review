@@ -1,0 +1,109 @@
+<div style="margin-bottom: 2rem;">
+  <h1 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 0.25rem;">🛒 Your Shopping Cart</h1>
+  <p style="color: var(--text-muted);">Review your items and apply promotional coupons before checkout</p>
+</div>
+
+<% if @cart.cart_items.any? %>
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; align-items: start;">
+    
+    <div class="cart-container">
+      <table class="cart-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Total</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @cart.cart_items.each do |item| %>
+            <tr>
+              <td>
+                <%= link_to item.product.title, item.product, class: "product-title", style: "font-size: 1.05rem;" %>
+              </td>
+              <td>₹<%= number_with_precision(item.product.price, precision: 2) %></td>
+              <td>
+                <%= form_with(url: update_quantity_cart_path(id: item.id), method: :patch, class: "quantity-controls") do |f| %>
+                  <%= f.number_field :quantity, value: item.quantity, min: 1, class: "quantity-input" %>
+                  <%= f.submit "Update", class: "btn btn-secondary btn-sm" %>
+                <% end %>
+              </td>
+              <td style="font-weight: 700;">
+                ₹<%= number_with_precision(item.total_price, precision: 2) %>
+              </td>
+              <td>
+                <%= button_to "✕", remove_item_cart_path(id: item.id), method: :delete, class: "btn btn-danger btn-sm", style: "border-radius: 50%; width: 32px; height: 32px; padding: 0;" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+
+      <!-- Coupon Apply Section -->
+      <div style="border-top: 1px solid var(--border); padding-top: 1.5rem;">
+        <h4 style="margin-bottom: 0.75rem;">Have a Promo Coupon?</h4>
+        <% if @coupon %>
+          <div style="display: flex; align-items: center; justify-content: space-between; background: var(--success-light); color: var(--success); padding: 0.75rem 1.25rem; border-radius: var(--radius-sm);">
+            <div>
+              <strong>🎉 <%= @coupon.code %> Applied:</strong> <%= @coupon.discount_percent %>% discount!
+            </div>
+            <%= button_to "Remove", remove_coupon_cart_path, method: :delete, class: "btn btn-secondary btn-sm" %>
+          </div>
+        <% else %>
+          <%= form_with(url: apply_coupon_cart_path, method: :post, class: "coupon-box") do |f| %>
+            <%= f.text_field :coupon_code, placeholder: "Enter code (e.g., WELCOME10)", class: "form-control" %>
+            <%= f.submit "Apply Coupon", class: "btn btn-primary" %>
+          <% end %>
+          <p style="font-size: 0.85rem; color: var(--text-muted);">
+            Try sample codes: <strong>WELCOME10</strong> (10% off) or <strong>MEGA2000</strong> (20% off over ₹2000)
+          </p>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Order Summary Column -->
+    <div class="cart-container" style="position: sticky; top: 100px;">
+      <h3 style="font-size: 1.4rem; font-weight: 700; margin-bottom: 1.5rem;">Order Summary</h3>
+      
+      <% total = @cart.total_price %>
+      <% discount = @coupon ? @coupon.calculate_discount(total) : 0.0 %>
+      <% final = total - discount %>
+
+      <div class="summary-row">
+        <span>Subtotal</span>
+        <span>₹<%= number_with_precision(total, precision: 2) %></span>
+      </div>
+
+      <% if discount > 0 %>
+        <div class="summary-row" style="color: var(--success); font-weight: 600;">
+          <span>Coupon Discount (<%= @coupon.code %>)</span>
+          <span>- ₹<%= number_with_precision(discount, precision: 2) %></span>
+        </div>
+      <% end %>
+
+      <div class="summary-row">
+        <span>Shipping & Tax</span>
+        <span style="color: var(--success); font-weight: 600;">FREE</span>
+      </div>
+
+      <div class="summary-row summary-total">
+        <span>Final Payable</span>
+        <span style="color: var(--primary);">₹<%= number_with_precision(final, precision: 2) %></span>
+      </div>
+
+      <%= link_to "Proceed to Checkout →", new_order_path, class: "btn btn-primary", style: "width: 100%; margin-top: 1.5rem; text-align: center; font-size: 1.1rem; padding: 0.85rem;" %>
+      
+      <%= link_to "← Continue Shopping", products_path, style: "display: block; text-align: center; margin-top: 1rem; color: var(--text-muted); text-decoration: none; font-size: 0.9rem;" %>
+    </div>
+
+  </div>
+<% else %>
+  <div style="text-align: center; padding: 5rem 2rem; background: var(--surface); border-radius: var(--radius-lg); border: 1px dashed var(--border);">
+    <div style="font-size: 4rem; margin-bottom: 1rem;">🛒</div>
+    <h2 style="margin-bottom: 0.5rem;">Your cart is completely empty</h2>
+    <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Looks like you haven't added any products yet.</p>
+    <%= link_to "Browse Products", products_path, class: "btn btn-primary" %>
+  </div>
+<% end %>

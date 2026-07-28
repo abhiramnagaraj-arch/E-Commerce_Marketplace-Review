@@ -1,0 +1,9 @@
+# Root gitignore
+.gemini/
+*.log
+tmp/
+log/
+.env*
+config/*.key
+*.sqlite3
+storage/
