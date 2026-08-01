@@ -1,0 +1,30 @@
+<div class="page-header">
+  <div>
+    <h1>Admin Dashboard</h1>
+    <p class="muted">Manage the store setup.</p>
+  </div>
+  <div class="actions">
+    <%= link_to "View orders", admin_orders_path, class: "btn btn-secondary" %>
+    <%= link_to "Promotions", admin_promotions_path, class: "btn btn-secondary" %>
+    <%= link_to "Manage categories", admin_categories_path, class: "btn btn-primary" %>
+  </div>
+</div>
+
+<div class="simple-grid">
+  <div class="list-card">
+    <h2><%= @category_count %></h2>
+    <p class="muted">Categories</p>
+  </div>
+  <div class="list-card">
+    <h2><%= @product_count %></h2>
+    <p class="muted">Active products</p>
+  </div>
+  <div class="list-card">
+    <h2><%= @order_count %></h2>
+    <p class="muted">Orders</p>
+  </div>
+  <div class="list-card">
+    <h2><%= @promotion_count %></h2>
+    <p class="muted">Active promotions</p>
+  </div>
+</div>

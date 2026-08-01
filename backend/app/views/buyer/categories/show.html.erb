@@ -1,0 +1,26 @@
+<div class="page-header">
+  <div>
+    <h1><%= @category.name %></h1>
+    <p class="muted"><%= @category.description %></p>
+  </div>
+  <%= link_to "Back to categories", buyer_categories_path, class: "btn btn-secondary" %>
+</div>
+
+<% if @products.any? %>
+  <div class="products-grid">
+    <% @products.each do |product| %>
+      <div class="product-card">
+        <div class="product-info">
+          <%= link_to product.title, product_path(product), class: "product-title" %>
+          <p class="product-description"><%= product.description %></p>
+          <div class="product-footer">
+            <span class="product-price">₹<%= number_with_precision(product.price, precision: 2) %></span>
+            <%= button_to "Add to cart", add_item_buyer_cart_path(product_id: product.id), method: :post, class: "btn btn-primary btn-sm", disabled: product.stock.zero? %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <div class="empty-state list-card">No products in this category.</div>
+<% end %>

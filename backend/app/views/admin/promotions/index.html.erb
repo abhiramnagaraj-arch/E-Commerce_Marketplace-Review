@@ -1,0 +1,47 @@
+<div class="page-header">
+  <div>
+    <h1>Promotions</h1>
+    <p class="muted">Manage discounts funded by the store.</p>
+  </div>
+  <%= link_to "Add promotion", new_admin_promotion_path, class: "btn btn-primary" %>
+</div>
+
+<div class="list-card">
+  <% if @promotions.any? %>
+    <% @promotions.each do |promotion| %>
+      <div class="list-row">
+        <div>
+          <strong><%= promotion.name %></strong>
+          <p class="muted">
+            <%= promotion.kind.titleize %> ·
+            <%= promotion.discount_percent %>% off ·
+            <%= promotion.active? ? "Active" : "Inactive" %>
+          </p>
+          <% if promotion.code.present? %>
+            <p class="muted">Code: <%= promotion.code %></p>
+          <% elsif promotion.product %>
+            <p class="muted">Product: <%= promotion.product.title %></p>
+          <% elsif promotion.category %>
+            <p class="muted">Category: <%= promotion.category.name %></p>
+          <% end %>
+          <% if promotion.starts_at || promotion.ends_at %>
+            <p class="muted">
+              <%= promotion.starts_at&.strftime("%d %b %Y") || "Now" %> –
+              <%= promotion.ends_at&.strftime("%d %b %Y") || "No end date" %>
+            </p>
+          <% end %>
+        </div>
+
+        <div class="actions">
+          <%= link_to "Edit", edit_admin_promotion_path(promotion), class: "btn btn-secondary btn-sm" %>
+          <%= button_to promotion.active? ? "Deactivate" : "Activate",
+                        toggle_admin_promotion_path(promotion),
+                        method: :patch,
+                        class: "btn btn-secondary btn-sm" %>
+        </div>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="empty-state">No promotions yet.</div>
+  <% end %>
+</div>

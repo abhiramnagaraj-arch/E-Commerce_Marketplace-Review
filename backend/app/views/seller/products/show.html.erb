@@ -1,0 +1,29 @@
+<div class="page-header">
+  <div>
+    <h1><%= @product.title %></h1>
+    <p class="muted"><%= @product.category.name %></p>
+  </div>
+  <div class="actions">
+    <%= link_to "Back", seller_products_path, class: "btn btn-secondary" %>
+    <%= link_to "Edit", edit_seller_product_path(@product), class: "btn btn-primary" %>
+    <% if @product.active? %>
+      <%= button_to "Archive", seller_product_path(@product), method: :delete, data: { turbo_confirm: "Archive this product?" }, class: "btn btn-danger" %>
+    <% end %>
+  </div>
+</div>
+
+<div class="simple-grid">
+  <div class="list-card">
+    <h2>Product details</h2>
+    <p><%= @product.description.presence || "No description provided." %></p>
+  </div>
+
+  <div class="list-card">
+    <dl class="detail-list">
+      <div><dt>Price</dt><dd>₹<%= number_with_precision(@product.price, precision: 2) %></dd></div>
+      <div><dt>Stock</dt><dd><%= @product.stock %></dd></div>
+      <div><dt>Status</dt><dd><%= @product.active? ? "Active" : "Archived" %></dd></div>
+      <div><dt>Category</dt><dd><%= link_to @product.category.name, seller_category_path(@product.category) %></dd></div>
+    </dl>
+  </div>
+</div>

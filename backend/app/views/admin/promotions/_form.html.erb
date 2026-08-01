@@ -1,0 +1,66 @@
+<%= form_with model: [:admin, promotion], class: "form-card" do |form| %>
+  <% if promotion.errors.any? %>
+    <div class="flash-alert">
+      <%= promotion.errors.full_messages.to_sentence %>
+    </div>
+  <% end %>
+
+  <div class="form-group">
+    <%= form.label :name, class: "form-label" %>
+    <%= form.text_field :name, class: "form-control", required: true %>
+  </div>
+
+  <div class="form-group">
+    <%= form.label :kind, "Promotion type", class: "form-label" %>
+    <%= form.select :kind, Promotion.kinds.keys.map { |kind| [kind.titleize, kind] }, {}, class: "form-control" %>
+  </div>
+
+  <div class="form-group">
+    <%= form.label :code, "Code (coupon only)", class: "form-label" %>
+    <%= form.text_field :code, class: "form-control" %>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <%= form.label :discount_percent, "Discount percentage", class: "form-label" %>
+      <%= form.number_field :discount_percent, min: 1, max: 100, class: "form-control", required: true %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :min_order_amount, "Minimum cart value", class: "form-label" %>
+      <%= form.number_field :min_order_amount, min: 0, step: 0.01, class: "form-control", required: true %>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <%= form.label :product_id, "Product (product discount only)", class: "form-label" %>
+    <%= form.collection_select :product_id, @products, :id, :title, { include_blank: "No product" }, class: "form-control" %>
+  </div>
+
+  <div class="form-group">
+    <%= form.label :category_id, "Category (category discount only)", class: "form-label" %>
+    <%= form.collection_select :category_id, @categories, :id, :name, { include_blank: "No category" }, class: "form-control" %>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <%= form.label :starts_at, class: "form-label" %>
+      <%= form.datetime_local_field :starts_at, class: "form-control" %>
+    </div>
+
+    <div class="form-group">
+      <%= form.label :ends_at, class: "form-label" %>
+      <%= form.datetime_local_field :ends_at, class: "form-control" %>
+    </div>
+  </div>
+
+  <div class="form-group">
+    <%= form.check_box :active %>
+    <%= form.label :active %>
+  </div>
+
+  <div class="actions">
+    <%= form.submit class: "btn btn-primary" %>
+    <%= link_to "Cancel", admin_promotions_path, class: "btn btn-secondary" %>
+  </div>
+<% end %>

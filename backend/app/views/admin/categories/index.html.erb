@@ -1,0 +1,22 @@
+<div class="page-header">
+  <div>
+    <h1>Categories</h1>
+    <p class="muted">Categories used by products.</p>
+  </div>
+  <%= link_to "Add category", new_admin_category_path, class: "btn btn-primary" %>
+</div>
+
+<div class="list-card">
+  <% @categories.each do |category| %>
+    <div class="list-row">
+      <div>
+        <strong><%= category.name %></strong>
+        <p class="muted"><%= category.description %></p>
+      </div>
+      <div class="actions">
+        <%= link_to "Edit", edit_admin_category_path(category), class: "btn btn-secondary btn-sm" %>
+        <%= button_to "Delete", admin_category_path(category), method: :delete, data: { turbo_confirm: "Delete this category?" }, class: "btn btn-danger btn-sm" %>
+      </div>
+    </div>
+  <% end %>
+</div>

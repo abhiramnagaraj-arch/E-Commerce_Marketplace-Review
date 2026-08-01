@@ -1,0 +1,75 @@
+<div class="page-header">
+  <div>
+    <h1>Your Cart</h1>
+    <p class="muted">Review your items before checkout.</p>
+  </div>
+  <%= link_to "Continue shopping", products_path, class: "btn btn-secondary" %>
+</div>
+
+<% if @cart.cart_items.any? %>
+  <div class="cart-layout">
+    <div class="cart-container">
+      <% @cart_items.each do |item| %>
+        <div class="cart-item-row">
+          <div class="cart-item-info">
+            <%= link_to item.product.title, product_path(item.product), class: "product-title" %>
+            <p class="muted">₹<%= number_with_precision(item.product.price, precision: 2) %> each</p>
+          </div>
+
+          <div class="quantity-controls">
+            <%= button_to "−", decrement_item_buyer_cart_path(id: item.id), method: :patch, class: "quantity-button" %>
+            <strong><%= item.quantity %></strong>
+            <%= button_to "+", increment_item_buyer_cart_path(id: item.id), method: :patch, class: "quantity-button" %>
+          </div>
+
+          <strong>₹<%= number_with_precision(@line_totals[item.id], precision: 2) %></strong>
+          <%= button_to "Remove", remove_item_buyer_cart_path(id: item.id), method: :delete, class: "btn btn-danger btn-sm" %>
+        </div>
+      <% end %>
+
+      <div class="promotion-section">
+        <% if @promotion %>
+          <span><strong><%= @promotion.name %></strong> applied</span>
+          <% if @promotion.coupon? %>
+            <%= button_to "Remove", remove_promotion_buyer_cart_path, method: :delete, class: "btn btn-secondary btn-sm" %>
+          <% end %>
+        <% end %>
+
+        <% unless @promotion&.coupon? %>
+          <%= form_with url: apply_promotion_buyer_cart_path, class: "promotion-box" do |form| %>
+            <%= form.text_field :promotion_code, placeholder: "Promotion code", class: "form-control" %>
+            <%= form.submit "Apply", class: "btn btn-secondary" %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="cart-container summary-panel">
+      <h2>Order Summary</h2>
+      <div class="summary-row">
+        <span>Items (<%= @summary[:item_count] %>)</span>
+        <span>₹<%= number_with_precision(@summary[:subtotal], precision: 2) %></span>
+      </div>
+
+      <% if @summary[:discounted] %>
+        <div class="summary-row discount-text">
+          <span><%= @summary[:promotion].name %></span>
+          <span>− ₹<%= number_with_precision(@summary[:discount], precision: 2) %></span>
+        </div>
+      <% end %>
+
+      <div class="summary-row summary-total">
+        <span>Total</span>
+        <span>₹<%= number_with_precision(@summary[:total], precision: 2) %></span>
+      </div>
+
+      <%= link_to "Checkout", new_buyer_order_path, class: "btn btn-primary full-width" %>
+    </div>
+  </div>
+<% else %>
+  <div class="empty-state list-card">
+    <h2>Your cart is empty</h2>
+    <p class="muted">Add a product to get started.</p>
+    <%= link_to "Browse products", products_path, class: "btn btn-primary" %>
+  </div>
+<% end %>

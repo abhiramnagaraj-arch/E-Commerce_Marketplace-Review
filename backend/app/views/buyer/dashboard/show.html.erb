@@ -1,0 +1,30 @@
+<div class="page-header">
+  <div>
+    <h1>Buyer Dashboard</h1>
+    <p class="muted">Welcome, <%= current_user.name %>.</p>
+  </div>
+  <div class="actions">
+    <%= link_to "View cart", buyer_cart_path, class: "btn btn-secondary" %>
+    <%= link_to "Browse products", products_path, class: "btn btn-primary" %>
+  </div>
+</div>
+
+<div class="list-card">
+  <div class="section-heading">
+    <h2>Recent orders</h2>
+    <%= link_to "View all", buyer_orders_path %>
+  </div>
+  <% if @orders.any? %>
+    <% @orders.each do |order| %>
+      <div class="list-row">
+        <div>
+          <%= link_to "Order ##{order.id}", buyer_order_path(order), class: "product-title" %>
+          <p class="muted"><%= order.created_at.strftime("%d %b %Y") %> · <%= order.status.capitalize %></p>
+        </div>
+        <strong>₹<%= number_with_precision(order.final_amount, precision: 2) %></strong>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="empty-state">You have not placed an order yet.</div>
+  <% end %>
+</div>

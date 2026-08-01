@@ -1,0 +1,11 @@
+<div class="page-header">
+  <div>
+    <h1>Edit Product</h1>
+    <p class="muted"><%= @product.title %></p>
+  </div>
+  <% if @product.active? %>
+    <%= button_to "Archive", seller_product_path(@product), method: :delete, data: { turbo_confirm: "Archive this product?" }, class: "btn btn-danger" %>
+  <% end %>
+</div>
+
+<%= render "form", product: @product %>

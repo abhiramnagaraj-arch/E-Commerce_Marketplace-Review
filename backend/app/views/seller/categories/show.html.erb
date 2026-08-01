@@ -1,0 +1,31 @@
+<div class="page-header">
+  <div>
+    <h1><%= @category.name %></h1>
+    <p class="muted"><%= @category.description %></p>
+  </div>
+  <div class="actions">
+    <%= link_to "Back", seller_categories_path, class: "btn btn-secondary" %>
+    <%= link_to "Add product", new_seller_product_path(category_id: @category.id), class: "btn btn-primary" %>
+  </div>
+</div>
+
+<% if @products.any? %>
+  <div class="list-card">
+    <% @products.each do |product| %>
+      <div class="list-row">
+        <div>
+          <%= link_to product.title, seller_product_path(product), class: "product-title" %>
+          <p class="muted">Stock: <%= product.stock %></p>
+        </div>
+        <div class="actions">
+          <%= link_to "Edit", edit_seller_product_path(product), class: "btn btn-secondary btn-sm" %>
+          <% if product.active? %>
+            <%= button_to "Archive", seller_product_path(product), method: :delete, data: { turbo_confirm: "Archive this product?" }, class: "btn btn-danger btn-sm" %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <div class="empty-state list-card">No products added in this category.</div>
+<% end %>

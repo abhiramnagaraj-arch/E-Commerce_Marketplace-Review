@@ -1,0 +1,22 @@
+<div class="page-header">
+  <div>
+    <h1>Categories</h1>
+    <p class="muted">Find products by category.</p>
+  </div>
+  <%= link_to "All products", products_path, class: "btn btn-secondary" %>
+</div>
+
+<div class="products-grid">
+  <% @categories.each do |category| %>
+    <div class="product-card">
+      <div class="product-info">
+        <%= link_to category.name, buyer_category_path(category), class: "product-title" %>
+        <p class="product-description"><%= category.description %></p>
+        <div class="product-footer">
+          <span class="muted"><%= @product_counts.fetch(category.id, 0) %> products</span>
+          <%= link_to "Browse", buyer_category_path(category), class: "btn btn-primary btn-sm" %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>

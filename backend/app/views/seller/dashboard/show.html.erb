@@ -1,0 +1,43 @@
+<div class="page-header">
+  <div>
+    <h1>Seller Dashboard</h1>
+    <p class="muted">Welcome, <%= current_user.name %>.</p>
+  </div>
+  <%= link_to "Add product", new_seller_product_path, class: "btn btn-primary" %>
+</div>
+
+<div class="simple-grid">
+  <div class="list-card">
+    <div class="section-heading">
+      <h2>Your products</h2>
+      <%= link_to "View all", seller_products_path %>
+    </div>
+    <% if @products.any? %>
+      <% @products.first(5).each do |product| %>
+        <div class="list-row">
+          <%= link_to product.title, seller_product_path(product) %>
+          <span class="muted">Stock: <%= product.stock %></span>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="empty-state">No products added yet.</div>
+    <% end %>
+  </div>
+
+  <div class="list-card">
+    <div class="section-heading">
+      <h2>Recent orders</h2>
+      <%= link_to "View all", seller_orders_path %>
+    </div>
+    <% if @seller_orders.any? %>
+      <% @seller_orders.each do |seller_order| %>
+        <div class="list-row">
+          <%= link_to "Order ##{seller_order.order_id}", seller_order_path(seller_order) %>
+          <span class="muted"><%= seller_order.status.titleize %></span>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="empty-state">No sales yet.</div>
+    <% end %>
+  </div>
+</div>

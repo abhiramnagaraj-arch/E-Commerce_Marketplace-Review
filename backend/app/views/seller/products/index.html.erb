@@ -1,0 +1,35 @@
+<div class="page-header">
+  <div>
+    <h1>My Products</h1>
+    <p class="muted">Manage your product listings.</p>
+  </div>
+  <div class="actions">
+    <%= link_to "Categories", seller_categories_path, class: "btn btn-secondary" %>
+    <%= link_to "Add product", new_seller_product_path, class: "btn btn-primary" %>
+  </div>
+</div>
+
+<% if @products.any? %>
+  <div class="list-card">
+    <% @products.each do |product| %>
+      <div class="list-row">
+        <div>
+          <%= link_to product.title, seller_product_path(product), class: "product-title" %>
+          <p class="muted"><%= product.category.name %> · Stock: <%= product.stock %> · <%= product.active? ? "Active" : "Archived" %></p>
+        </div>
+        <div class="product-actions">
+          <strong>₹<%= number_with_precision(product.price, precision: 2) %></strong>
+          <%= link_to "Edit", edit_seller_product_path(product), class: "btn btn-secondary btn-sm" %>
+          <% if product.active? %>
+            <%= button_to "Archive", seller_product_path(product), method: :delete, data: { turbo_confirm: "Archive this product?" }, class: "btn btn-danger btn-sm" %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <div class="empty-state list-card">
+    <h2>No products yet</h2>
+    <%= link_to "Add your first product", new_seller_product_path, class: "btn btn-primary" %>
+  </div>
+<% end %>

@@ -1,0 +1,29 @@
+<div class="page-header">
+  <div>
+    <h1>Orders</h1>
+    <p class="muted">Manage orders containing your products.</p>
+  </div>
+</div>
+
+<div class="list-card">
+  <% if @seller_orders.any? %>
+    <% @seller_orders.each do |seller_order| %>
+      <div class="list-row">
+        <div>
+          <strong>Order #<%= seller_order.order_id %></strong>
+          <p class="muted">
+            <%= seller_order.order.customer_name %> ·
+            <%= seller_order.order_items.size %> items ·
+            <%= seller_order.status.titleize %>
+          </p>
+        </div>
+        <div class="actions">
+          <strong>₹<%= number_with_precision(seller_order.seller_total, precision: 2) %></strong>
+          <%= link_to "View", seller_order_path(seller_order), class: "btn btn-secondary btn-sm" %>
+        </div>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="empty-state">No orders yet.</div>
+  <% end %>
+</div>

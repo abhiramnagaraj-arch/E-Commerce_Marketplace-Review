@@ -1,0 +1,33 @@
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+  <div>
+    <h1 style="font-size: 2.2rem; font-weight: 700; margin-bottom: 0.25rem;"><%= @category.name %></h1>
+    <p style="color: var(--text-muted);"><%= @category.description %></p>
+  </div>
+  <%= link_to "Back to categories", categories_path, class: "btn btn-secondary" %>
+</div>
+
+<h2 style="margin-bottom: 1.5rem;">Products in <%= @category.name %> (<%= @products.count %>)</h2>
+
+<% if @products.any? %>
+  <div class="products-grid">
+    <% @products.each do |product| %>
+      <div class="product-card">
+        <div class="product-image-placeholder">
+          📦
+        </div>
+        <div class="product-info">
+          <%= link_to product.title, product, class: "product-title" %>
+          <p class="product-description"><%= product.description %></p>
+          <div class="product-footer">
+            <span class="product-price">₹<%= number_with_precision(product.price, precision: 2) %></span>
+            <% if user_signed_in? && current_user.buyer? %>
+              <%= button_to "+ Add to Cart", add_item_buyer_cart_path(product_id: product.id), method: :post, class: "btn btn-primary btn-sm", disabled: product.stock.zero? %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% else %>
+  <p>No products in this category yet.</p>
+<% end %>

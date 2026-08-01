@@ -1,0 +1,25 @@
+<div class="page-header">
+  <div>
+    <h1>Orders</h1>
+    <p class="muted">All customer orders.</p>
+  </div>
+</div>
+
+<div class="list-card">
+  <% if @orders.any? %>
+    <% @orders.each do |order| %>
+      <div class="list-row">
+        <div>
+          <strong>Order #<%= order.id %></strong>
+          <p class="muted"><%= order.customer_name %> · <%= order.status.titleize %></p>
+        </div>
+        <div class="actions">
+          <strong>₹<%= number_with_precision(order.final_amount, precision: 2) %></strong>
+          <%= link_to "View", admin_order_path(order), class: "btn btn-secondary btn-sm" %>
+        </div>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="empty-state">No orders yet.</div>
+  <% end %>
+</div>

@@ -1,0 +1,60 @@
+<div class="page-header">
+  <div>
+    <h1>Order #<%= @order.id %></h1>
+    <p class="muted">Status: <%= @seller_order.status.titleize %></p>
+  </div>
+  <%= link_to "Back to orders", seller_orders_path, class: "btn btn-secondary" %>
+</div>
+
+<div class="simple-grid">
+  <div class="list-card">
+    <h2>Your items</h2>
+    <% @order_items.each do |item| %>
+      <div class="list-row">
+        <span><%= item.product_title %> × <%= item.quantity %></span>
+        <strong>₹<%= number_with_precision(item.subtotal, precision: 2) %></strong>
+      </div>
+    <% end %>
+    <div class="summary-row summary-total">
+      <span>Your total</span>
+      <span>₹<%= number_with_precision(@seller_order.seller_total, precision: 2) %></span>
+    </div>
+  </div>
+
+  <div class="list-card">
+    <h2>Delivery details</h2>
+    <p><strong><%= @order.customer_name %></strong></p>
+    <p><%= @order.customer_email %></p>
+    <p><%= @order.customer_address %></p>
+  </div>
+</div>
+
+<div class="list-card">
+  <h2>Order actions</h2>
+
+  <div class="actions">
+    <% if @seller_order.may_process? %>
+      <%= button_to "Start processing", process_order_seller_order_path(@seller_order), method: :patch, class: "btn btn-primary" %>
+    <% end %>
+
+    <% if @seller_order.may_ship? %>
+      <%= button_to "Mark as shipped", ship_seller_order_path(@seller_order), method: :patch, class: "btn btn-primary" %>
+    <% end %>
+
+    <% if @seller_order.may_deliver? %>
+      <%= button_to "Mark as delivered", deliver_seller_order_path(@seller_order), method: :patch, class: "btn btn-primary" %>
+    <% end %>
+  </div>
+
+  <% if @seller_order.may_reject? %>
+    <%= form_with url: reject_seller_order_path(@seller_order), method: :patch, class: "form-card" do |form| %>
+      <div class="form-group">
+        <%= form.label :rejection_reason, "Rejection reason", class: "form-label" %>
+        <%= form.text_area :rejection_reason, rows: 3, class: "form-control", required: true %>
+      </div>
+      <%= form.submit "Reject order", class: "btn btn-danger", data: { turbo_confirm: "Reject this order?" } %>
+    <% end %>
+  <% elsif @seller_order.rejected? %>
+    <p><strong>Rejection reason:</strong> <%= @seller_order.rejection_reason %></p>
+  <% end %>
+</div>
