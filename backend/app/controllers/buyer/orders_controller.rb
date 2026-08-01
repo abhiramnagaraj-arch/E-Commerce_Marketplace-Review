@@ -16,13 +16,11 @@ module Buyer
 
     def new
       @order = current_user.orders.build
-      authorize! :create, @order
       render "orders/new"
     end
 
     def create
       @order = current_user.orders.build(order_params)
-      authorize! :create, @order
 
       if @order.place_from_cart(@cart, @promotion)
         session.delete(:promotion_code)
@@ -34,11 +32,9 @@ module Buyer
 
     def cancel
       if @order.cancel_order(params[:cancel_reason])
-        redirect_to buyer_order_path(@order),
-                    notice: "Order canceled successfully. Product stock has been restored."
+        redirect_to buyer_order_path(@order),notice: "Order canceled successfully. Product stock has been restored."
       else
-        redirect_to buyer_order_path(@order),
-                    alert: @order.errors.full_messages.to_sentence
+        redirect_to buyer_order_path(@order),alert: @order.errors.full_messages.to_sentence
       end
     end
 
@@ -51,13 +47,11 @@ module Buyer
 
     def set_order
       @order = current_user.orders.find(params[:id])
-      authorize! :read, @order
     end
 
     def set_summary
       @cart_items = @cart.cart_items.includes(:product)
       @promotion = current_promotion(@cart_items)
-      @line_totals = @cart_items.to_h { |item| [ item.id, item.total_price ] }
       @summary = @cart.summary(@promotion)
     end
 

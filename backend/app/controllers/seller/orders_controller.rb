@@ -37,8 +37,7 @@ module Seller
 
     def reject
       if @seller_order.reject_order(params[:rejection_reason])
-        redirect_to seller_order_path(@seller_order),
-                    notice: "Order was rejected and stock was restored."
+        redirect_to seller_order_path(@seller_order), notice: "Order was rejected and stock was restored."
       else
         redirect_with_error(@seller_order.errors.full_messages.to_sentence)
       end
@@ -48,7 +47,6 @@ module Seller
 
     def set_seller_order
       @seller_order = current_user.seller_orders.find(params[:id])
-      authorize! :manage, @seller_order
     end
 
     def redirect_with_error(message)

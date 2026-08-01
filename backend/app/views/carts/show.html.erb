@@ -17,12 +17,12 @@
           </div>
 
           <div class="quantity-controls">
-            <%= button_to "−", decrement_item_buyer_cart_path(id: item.id), method: :patch, class: "quantity-button" %>
+            <%= button_to "−", decrement_item_buyer_cart_path(id: item.id), method: :patch, class: "quantity-button", data: { turbo: false } %>
             <strong><%= item.quantity %></strong>
-            <%= button_to "+", increment_item_buyer_cart_path(id: item.id), method: :patch, class: "quantity-button" %>
+            <%= button_to "+", increment_item_buyer_cart_path(id: item.id), method: :patch, class: "quantity-button", data: { turbo: false } %>
           </div>
 
-          <strong>₹<%= number_with_precision(@line_totals[item.id], precision: 2) %></strong>
+          <strong>₹<%= number_with_precision(item.total_price, precision: 2) %></strong>
           <%= button_to "Remove", remove_item_buyer_cart_path(id: item.id), method: :delete, class: "btn btn-danger btn-sm" %>
         </div>
       <% end %>
@@ -51,7 +51,7 @@
         <span>₹<%= number_with_precision(@summary[:subtotal], precision: 2) %></span>
       </div>
 
-      <% if @summary[:discounted] %>
+      <% if @summary[:discount].positive? %>
         <div class="summary-row discount-text">
           <span><%= @summary[:promotion].name %></span>
           <span>− ₹<%= number_with_precision(@summary[:discount], precision: 2) %></span>

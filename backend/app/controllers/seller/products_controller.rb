@@ -8,7 +8,6 @@
 
       def new
         @product = current_user.products.build(category_id: params[:category_id])
-        authorize! :create, @product
         load_categories
       end
 
@@ -18,7 +17,6 @@
 
       def create
         @product = current_user.products.build(product_params)
-        authorize! :create, @product
         if @product.save
           redirect_to seller_product_path(@product), notice: "Product was successfully created."
         else
@@ -48,7 +46,6 @@
 
       def set_product
         @product = current_user.products.find(params[:id])
-        authorize! :manage, @product
       end
 
       def load_categories

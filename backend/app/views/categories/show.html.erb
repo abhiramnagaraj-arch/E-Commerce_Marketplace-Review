@@ -21,7 +21,7 @@
           <div class="product-footer">
             <span class="product-price">₹<%= number_with_precision(product.price, precision: 2) %></span>
             <% if user_signed_in? && current_user.buyer? %>
-              <%= button_to "+ Add to Cart", add_item_buyer_cart_path(product_id: product.id), method: :post, class: "btn btn-primary btn-sm", disabled: product.stock.zero? %>
+              <%= render "products/cart_controls", product: product, cart_item: cart_item_for(product) %>
             <% end %>
           </div>
         </div>

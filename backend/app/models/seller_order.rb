@@ -79,10 +79,6 @@ class SellerOrder < ApplicationRecord
     order_items.sum(:discount_amount)
   end
 
-  def buyer_total
-    order_items.sum(:final_amount)
-  end
-
   private
 
   def close_seller_order

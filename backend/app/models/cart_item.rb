@@ -23,7 +23,6 @@ class CartItem < ApplicationRecord
 
   def quantity_within_stock
     return unless product && quantity.to_i > product.stock
-
     errors.add(:quantity, "exceeds available stock")
   end
 

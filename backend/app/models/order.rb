@@ -1,18 +1,16 @@
 class Order < ApplicationRecord
   has_many :order_items, dependent: :destroy
   has_many :seller_orders, dependent: :destroy
-  has_many :products, through: :order_items
   belongs_to :buyer, class_name: "User", inverse_of: :orders
 
   validates :customer_name, :customer_email, :customer_address, presence: true
-  validates :total_amount, :discount_amount, :final_amount,
-            numericality: { greater_than_or_equal_to: 0 }
+  validates :total_amount, :discount_amount, :final_amount, numericality: { greater_than_or_equal_to: 0 }
 
   def place_from_cart(cart, promotion = nil)
     placed = false
 
     self.class.transaction do
-      items = cart.cart_items.includes(:product).order(:product_id).to_a
+      items = cart.cart_items.includes(:product).to_a
       items.each { |item| item.product.lock! }
 
       invalid_item = items.find do |item|
@@ -67,7 +65,7 @@ class Order < ApplicationRecord
         errors.add(:base, "This order can no longer be canceled because an item has shipped.")
         raise ActiveRecord::Rollback
       end
-
+ 
       parts.each do |part|
         unless part.cancel_by_buyer
           errors.add(:base, part.errors.full_messages.to_sentence)

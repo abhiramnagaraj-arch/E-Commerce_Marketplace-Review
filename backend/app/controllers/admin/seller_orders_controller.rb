@@ -28,8 +28,7 @@ module Admin
 
     def reject
       if @seller_order.reject_order(params[:rejection_reason])
-        redirect_to admin_order_path(@seller_order.order),
-                    notice: "Seller order was rejected and stock was restored."
+        redirect_to admin_order_path(@seller_order.order), notice: "Seller order was rejected and stock was restored."
       else
         redirect_with_error(@seller_order.errors.full_messages.to_sentence)
       end

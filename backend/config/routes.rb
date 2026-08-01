@@ -15,7 +15,6 @@ Rails.application.routes.draw do
       post :apply_promotion
       delete :remove_promotion
     end
-    resources :categories, only: %i[index show]
     resources :orders, only: %i[index show new create] do
       patch :cancel, on: :member
     end

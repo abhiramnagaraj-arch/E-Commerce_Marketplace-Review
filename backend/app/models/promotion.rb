@@ -12,36 +12,46 @@ class Promotion < ApplicationRecord
   before_validation :prepare_fields
 
   validates :name, presence: true
-  validates :discount_percent,numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: 100 }
+  validates :discount_percent, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: 100}
   validates :min_order_amount, numericality: { greater_than_or_equal_to: 0 }
+
   validates :code, presence: true, if: :coupon?
   validates :code, uniqueness: { case_sensitive: false }, allow_blank: true
+
   validates :product, presence: true, if: :product_discount?
   validates :category, presence: true, if: :category_discount?
   validates :starts_at, :ends_at, presence: true, if: :sale?
+
   validate :valid_dates
 
   def self.best_for(items, code: nil)
     if code.present?
       promotion = find_by("LOWER(code) = ?", code.downcase)
+
       return promotion if promotion&.coupon? && promotion.discount_total(items).positive?
-    
+
       return nil
     end
 
-    promotion = where(active: true).where.not(kind: kinds[:coupon]).select(&:available_now?).max_by do |offer|
+    promotions = where(active: true,
+      kind: %i[product_discount category_discount sale]
+    )
+
+    promotion = promotions.max_by do |offer|
       offer.discount_total(items)
     end
 
-    promotion if promotion&.discount_total(items)&.positive?
+    return unless promotion
+    return unless promotion.discount_total(items).positive?
+
+    promotion
   end
 
   def discounts_for(items)
     return {} unless eligible?(items)
 
     items.to_h do |item|
-      discount = applies_to?(item) ? percentage_of(item.total_price) : 0.to_d
-      [ item.id, discount ]
+      [ item.id, discount_for(item) ]
     end
   end
 
@@ -50,17 +60,11 @@ class Promotion < ApplicationRecord
   end
 
   def eligible?(items)
-    return false unless available_now?
-
-    items.sum(&:total_price) >= min_order_amount
-  end
-
-  def available_now?
     return false unless active?
     return false if starts_at.present? && starts_at > Time.current
     return false if ends_at.present? && ends_at < Time.current
 
-    true
+    items.sum(&:total_price) >= min_order_amount
   end
 
   def toggle_status
@@ -69,15 +73,19 @@ class Promotion < ApplicationRecord
 
   private
 
-  def applies_to?(item)
-    return true if coupon? || sale?
-    return item.product_id == product_id if product_discount?
-    return item.product.category_id == category_id if category_discount?
+  def discount_for(item)
+    amount =
+      case kind
+      when "coupon", "sale"
+        item.total_price
+      when "product_discount"
+        item.product_id == product_id ? item.total_price : 0.to_d
+      when "category_discount"
+        item.product.category_id == category_id ? item.total_price : 0.to_d
+      else
+        0.to_d
+      end
 
-    false
-  end
-
-  def percentage_of(amount)
     (amount * discount_percent / 100).round(2)
   end
 

@@ -22,7 +22,7 @@
     <div style="display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 1.5rem;">
       <div style="display: flex; gap: 0.75rem;">
         <% if user_signed_in? && current_user.buyer? %>
-          <%= button_to "🛒 Add to Cart", add_item_buyer_cart_path(product_id: @product.id), method: :post, class: "btn btn-primary", disabled: @product.stock.zero? %>
+          <%= render "products/cart_controls", product: @product, cart_item: cart_item_for(@product) %>
         <% end %>
         <%= link_to "← Back to Products", products_path, class: "btn btn-secondary" %>
       </div>

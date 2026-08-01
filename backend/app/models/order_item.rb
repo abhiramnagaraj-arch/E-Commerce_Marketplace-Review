@@ -5,10 +5,6 @@ class OrderItem < ApplicationRecord
 
   validates :product_title, presence: true
   validates :quantity, numericality: { only_integer: true, greater_than: 0 }
-  validates :price, :subtotal, :discount_amount, :final_amount,
-            numericality: { greater_than_or_equal_to: 0 }
+  validates :price, :subtotal, :discount_amount, :final_amount, numericality: { greater_than_or_equal_to: 0 }
 
-  def total_price
-    final_amount
-  end
 end

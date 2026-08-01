@@ -55,7 +55,7 @@
             <strong><%= item.product.title %></strong>
             <div style="font-size: 0.85rem; color: var(--text-muted);">Qty: <%= item.quantity %> × ₹<%= number_with_precision(item.product.price, precision: 2) %></div>
           </div>
-          <span style="font-weight: 600;">₹<%= number_with_precision(@line_totals[item.id], precision: 2) %></span>
+          <span style="font-weight: 600;">₹<%= number_with_precision(item.total_price, precision: 2) %></span>
         </div>
       <% end %>
     </div>
@@ -65,7 +65,7 @@
       <span>₹<%= number_with_precision(@summary[:subtotal], precision: 2) %></span>
     </div>
 
-    <% if @summary[:discounted] %>
+    <% if @summary[:discount].positive? %>
       <div class="summary-row" style="color: var(--success); font-weight: 600;">
         <span><%= @summary[:promotion].name %></span>
         <span>- ₹<%= number_with_precision(@summary[:discount], precision: 2) %></span>

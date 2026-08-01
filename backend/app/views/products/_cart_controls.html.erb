@@ -1,0 +1,11 @@
+<%= turbo_frame_tag dom_id(product, :cart_controls) do %>
+  <% if cart_item&.persisted? %>
+    <div class="quantity-controls">
+      <%= button_to "−", decrement_item_buyer_cart_path(id: cart_item.id), method: :patch, class: "quantity-button" %>
+      <strong><%= cart_item.quantity %></strong>
+      <%= button_to "+", increment_item_buyer_cart_path(id: cart_item.id), method: :patch, class: "quantity-button", disabled: cart_item.quantity >= product.stock %>
+    </div>
+  <% else %>
+    <%= button_to "+ Add to Cart", add_item_buyer_cart_path(product_id: product.id), method: :post, class: "btn btn-primary btn-sm", disabled: product.stock.zero? %>
+  <% end %>
+<% end %>
