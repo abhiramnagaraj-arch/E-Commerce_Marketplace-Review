@@ -2,9 +2,13 @@ class Order < ApplicationRecord
   has_many :order_items, dependent: :destroy
   has_many :seller_orders, dependent: :destroy
   belongs_to :buyer, class_name: "User", inverse_of: :orders
+  belongs_to :promotion, optional: true
 
   validates :customer_name, :customer_email, :customer_address, presence: true
   validates :total_amount, :discount_amount, :final_amount, numericality: { greater_than_or_equal_to: 0 }
+  validates :promotion_id,
+    uniqueness: { scope: :buyer_id, message: "coupon has already been used" },
+    if: -> { promotion&.coupon? }
 
   def place_from_cart(cart, promotion = nil)
     placed = false
@@ -31,6 +35,7 @@ class Order < ApplicationRecord
       self.promotion_name = applied_promotion&.name
       self.promotion_kind = applied_promotion&.kind
       self.promotion_code = applied_promotion&.code
+      self.promotion = applied_promotion
 
       if save
         create_order_items(items, summary[:line_discounts])
@@ -42,7 +47,7 @@ class Order < ApplicationRecord
     end
 
     placed
-  rescue ActiveRecord::RecordInvalid => error
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique => error
     errors.add(:base, error.message)
     false
   end
@@ -65,7 +70,7 @@ class Order < ApplicationRecord
         errors.add(:base, "This order can no longer be canceled because an item has shipped.")
         raise ActiveRecord::Rollback
       end
- 
+
       parts.each do |part|
         unless part.cancel_by_buyer
           errors.add(:base, part.errors.full_messages.to_sentence)
@@ -86,31 +91,35 @@ class Order < ApplicationRecord
   end
 
   def refresh_status
-    active_parts = seller_orders.reload.reject do |part|
-      part.rejected? || part.canceled?
-    end
-
-    new_status =
-      if active_parts.empty?
-        "canceled"
-      elsif active_parts.all?(&:delivered?)
-        "delivered"
-      elsif active_parts.all? { |part| part.shipped? || part.delivered? }
-        "shipped"
-      elsif active_parts.any? { |part| part.processing? || part.shipped? || part.delivered? }
-        "processing"
-      else
-        "confirmed"
+    with_lock do
+      active_parts = seller_orders.reload.reject do |part|
+        part.rejected? || part.canceled?
       end
 
-    active_items = order_items.where(seller_order: active_parts)
+      new_status =
+        if active_parts.empty?
+          "canceled"
+        elsif active_parts.all?(&:delivered?)
+          "delivered"
+        elsif active_parts.any?(&:delivered?)
+          "partially_delivered"
+        elsif active_parts.all? { |part| part.shipped? || part.delivered? }
+          "shipped"
+        elsif active_parts.any? { |part| part.processing? || part.shipped? || part.delivered? }
+          "processing"
+        else
+          "confirmed"
+        end
 
-    update!(
-      status: new_status,
-      total_amount: active_items.sum(:subtotal),
-      discount_amount: active_items.sum(:discount_amount),
-      final_amount: active_items.sum(:final_amount)
-    )
+      active_items = order_items.where(seller_order: active_parts)
+
+      update!(
+        status: new_status,
+        total_amount: active_items.sum(:subtotal),
+        discount_amount: active_items.sum(:discount_amount),
+        final_amount: active_items.sum(:final_amount)
+      )
+    end
   end
 
   private

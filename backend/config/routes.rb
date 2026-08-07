@@ -12,8 +12,7 @@ Rails.application.routes.draw do
       delete :remove_item
       patch :increment_item
       patch :decrement_item
-      post :apply_promotion
-      delete :remove_promotion
+      post :pick_offer
     end
     resources :orders, only: %i[index show new create] do
       patch :cancel, on: :member
@@ -38,15 +37,7 @@ Rails.application.routes.draw do
     resources :promotions, except: %i[show destroy] do
       patch :toggle, on: :member
     end
-    resources :orders, only: %i[index show] do
-      patch :cancel, on: :member
-    end
-    resources :seller_orders, only: [] do
-      patch :process_order, on: :member
-      patch :ship, on: :member
-      patch :deliver, on: :member
-      patch :reject, on: :member
-    end
+    resources :orders, only: %i[index show]
   end
 
   get "up" => "rails/health#show", as: :rails_health_check

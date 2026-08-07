@@ -23,7 +23,7 @@ module Buyer
       @order = current_user.orders.build(order_params)
 
       if @order.place_from_cart(@cart, @promotion)
-        session.delete(:promotion_code)
+        session.delete(:promotion_id)
         redirect_to buyer_order_path(@order), notice: "Order placed successfully! Thank you for shopping with us."
       else
         render "orders/new", status: :unprocessable_entity
@@ -32,9 +32,9 @@ module Buyer
 
     def cancel
       if @order.cancel_order(params[:cancel_reason])
-        redirect_to buyer_order_path(@order),notice: "Order canceled successfully. Product stock has been restored."
+        redirect_to buyer_order_path(@order), notice: "Order canceled successfully. Product stock has been restored."
       else
-        redirect_to buyer_order_path(@order),alert: @order.errors.full_messages.to_sentence
+        redirect_to buyer_order_path(@order), alert: @order.errors.full_messages.to_sentence
       end
     end
 
@@ -50,9 +50,10 @@ module Buyer
     end
 
     def set_summary
-      @cart_items = @cart.cart_items.includes(:product)
-      @promotion = current_promotion(@cart_items)
-      @summary = @cart.summary(@promotion)
+      @all_cart_items = @cart.cart_items.includes(:product).to_a
+      @cart_items, @items_page, @items_total_pages = paginate(@all_cart_items, per_page: 5, param: :items_page)
+      @promotion = current_promotion(@all_cart_items)
+      @summary = @cart.summary(@promotion, items: @all_cart_items)
     end
 
     def order_params

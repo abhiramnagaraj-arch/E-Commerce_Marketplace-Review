@@ -1,5 +1,5 @@
 seller = User.find_or_create_by!(email: "seller@example.com") do |user|
-  user.name = "Demo Seller"
+  user.name = "Demo Marketplace Seller"
   user.password = "password"
   user.role = :seller
 end
@@ -16,91 +16,195 @@ User.find_or_create_by!(email: "admin@example.com") do |user|
   user.role = :admin
 end
 
-laptops = Category.find_or_initialize_by(name: "Laptops & Computing")
-laptops.update!(description: "High-performance notebooks and workstations.")
+category_data = {
+  "Electronics" => "Mobiles, laptops, audio devices and accessories.",
+  "Fashion" => "Clothing, footwear and everyday fashion.",
+  "Home & Kitchen" => "Kitchen appliances and household essentials.",
+  "Beauty & Personal Care" => "Skin care, hair care and personal products.",
+  "Grocery" => "Daily groceries, beverages and cooking essentials.",
+  "Books" => "Popular fiction, self-help and technical books.",
+  "Sports & Fitness" => "Fitness, outdoor and sporting products.",
+  "Toys & Games" => "Toys, games and creative products for children."
+}
 
-audio = Category.find_or_initialize_by(name: "Audio & Headphones")
-audio.update!(description: "Headphones, wireless earbuds, and speakers.")
+categories = {}
 
-accessories = Category.find_or_initialize_by(name: "Tech Accessories")
-accessories.update!(description: "Keyboards, mice, chargers, and docks.")
+category_data.each do |name, description|
+  category = Category.find_or_create_by!(name: name) do |row|
+    row.description = description
+  end
+  categories[name] = category
+end
 
-macbook = Product.find_or_initialize_by(title: "MacBook Air M3")
-macbook.update!(
-  description: "Apple M3 laptop with 16GB memory and 512GB storage.",
-  price: 114_900,
-  stock: 15,
-  category: laptops,
-  seller: seller,
-  active: true
+product_data = [
+  [ "Samsung Galaxy S24", "Electronics", 69_999, 20, "AI smartphone with AMOLED display and premium cameras." ],
+  [ "ASUS Vivobook 15", "Electronics", 52_990, 12, "Everyday laptop with 16GB memory and 512GB SSD." ],
+  [ "Sony WH-1000XM5", "Electronics", 29_990, 25, "Wireless noise-cancelling headphones." ],
+  [ "boAt Airdopes 141", "Electronics", 1_299, 60, "Affordable wireless earbuds with long battery life." ],
+  [ "Men's Cotton T-Shirt", "Fashion", 799, 100, "Comfortable regular-fit cotton T-shirt." ],
+  [ "Women's Kurta Set", "Fashion", 1_499, 70, "Printed kurta set for everyday and festive wear." ],
+  [ "Running Shoes", "Fashion", 2_499, 50, "Lightweight running shoes with cushioned sole." ],
+  [ "Mixer Grinder", "Home & Kitchen", 3_499, 30, "750-watt mixer grinder with three jars." ],
+  [ "Cotton Bedsheet Set", "Home & Kitchen", 1_299, 45, "Double-bed cotton bedsheet with pillow covers." ],
+  [ "Non-Stick Cookware Set", "Home & Kitchen", 2_499, 35, "Three-piece cookware set for daily cooking." ],
+  [ "Anti-Dandruff Shampoo", "Beauty & Personal Care", 399, 100, "Gentle daily shampoo for scalp care." ],
+  [ "SPF 50 Sunscreen", "Beauty & Personal Care", 549, 90, "Lightweight broad-spectrum sunscreen." ],
+  [ "Eau De Parfum", "Beauty & Personal Care", 1_299, 40, "Long-lasting everyday fragrance." ],
+  [ "Premium Basmati Rice 5kg", "Grocery", 1_099, 80, "Long-grain aged basmati rice." ],
+  [ "Instant Coffee 200g", "Grocery", 449, 120, "Rich instant coffee for hot and cold drinks." ],
+  [ "Extra Virgin Olive Oil 1L", "Grocery", 899, 75, "Cold-extracted olive oil for cooking and salads." ],
+  [ "Atomic Habits", "Books", 499, 70, "Practical guide to building better habits." ],
+  [ "The Alchemist", "Books", 299, 90, "Popular novel about purpose and personal dreams." ],
+  [ "Python Crash Course", "Books", 2_199, 35, "Project-based introduction to Python programming." ],
+  [ "Premium Yoga Mat", "Sports & Fitness", 799, 65, "Non-slip exercise and yoga mat." ],
+  [ "Adjustable Dumbbell Set", "Sports & Fitness", 1_599, 40, "Adjustable home workout dumbbell set." ],
+  [ "Badminton Racket Set", "Sports & Fitness", 1_199, 45, "Two rackets with shuttlecocks and carry cover." ],
+  [ "Building Blocks Set", "Toys & Games", 999, 55, "Creative building set with colourful blocks." ],
+  [ "Remote Control Car", "Toys & Games", 1_499, 35, "Rechargeable remote control racing car." ],
+  [ "Family Board Game", "Toys & Games", 699, 60, "Multiplayer board game for family game nights." ]
+]
+
+products = {}
+
+product_data.each do |title, category_name, price, stock, description|
+  product = Product.find_or_initialize_by(title: title, seller: seller)
+  product.update!(
+    category: categories[category_name],
+    price: price,
+    stock: stock,
+    description: description,
+    active: true
+  )
+  products[title] = product
+end
+
+def set_offer(name, details, levels)
+  Promotion.transaction do
+    offer = Promotion.find_or_initialize_by(name: name)
+    offer.assign_attributes(details)
+    offer.tiers.destroy_all if offer.persisted?
+    levels.each { |level| offer.tiers.build(level) }
+    offer.save!
+  end
+end
+
+Promotion.where(name: [ "Welcome 10%", "MEGA20", "MacBook Offer", "Audio Offer", "Store Sale" ])
+  .update_all(active: false)
+
+set_offer(
+  "Shop More Coupon",
+  {
+    kind: :coupon,
+    code: "SHOPMORE",
+    starts_at: nil,
+    ends_at: nil,
+    active: true
+  },
+  [
+    { minimum_value: 2_000, discount_percent: 5 },
+    { minimum_value: 5_000, discount_percent: 8 },
+    { minimum_value: 10_000, discount_percent: 10 }
+  ]
 )
 
-headphones = Product.find_or_initialize_by(title: "Sony WH-1000XM5")
-headphones.update!(
-  description: "Wireless headphones with noise cancellation.",
-  price: 29_990,
-  stock: 25,
-  category: audio,
-  seller: seller,
-  active: true
+set_offer(
+  "T-Shirt Multi-Buy Offer",
+  {
+    kind: :product_discount,
+    product: products["Men's Cotton T-Shirt"],
+    starts_at: nil,
+    ends_at: nil,
+    active: true
+  },
+  [
+    { minimum_value: 2, discount_percent: 5 },
+    { minimum_value: 3, discount_percent: 10 },
+    { minimum_value: 5, discount_percent: 15 }
+  ]
 )
 
-mouse = Product.find_or_initialize_by(title: "Logitech MX Master 3S")
-mouse.update!(
-  description: "Wireless productivity mouse.",
-  price: 8_999,
-  stock: 40,
-  category: accessories,
-  seller: seller,
-  active: true
+set_offer(
+  "Coffee Stock-Up Offer",
+  {
+    kind: :product_discount,
+    product: products["Instant Coffee 200g"],
+    starts_at: nil,
+    ends_at: nil,
+    active: true
+  },
+  [
+    { minimum_value: 2, discount_percent: 5 },
+    { minimum_value: 4, discount_percent: 10 },
+    { minimum_value: 6, discount_percent: 15 }
+  ]
 )
 
-welcome = Promotion.find_by("LOWER(code) = ?", "welcome10") ||
-          Promotion.new(code: "WELCOME10")
-welcome.update!(
-  name: "Welcome 10%",
-  kind: :coupon,
-  discount_percent: 10,
-  min_order_amount: 1_000,
-  starts_at: nil,
-  ends_at: nil,
-  active: true
+set_offer(
+  "Fashion Combo Offer",
+  {
+    kind: :category_discount,
+    category: categories["Fashion"],
+    starts_at: nil,
+    ends_at: nil,
+    active: true
+  },
+  [
+    { minimum_value: 2_000, discount_percent: 7 },
+    { minimum_value: 5_000, discount_percent: 12 },
+    { minimum_value: 10_000, discount_percent: 15 }
+  ]
 )
 
-macbook_offer = Promotion.find_or_initialize_by(name: "MacBook Offer")
-macbook_offer.update!(
-  kind: :product_discount,
-  product: macbook,
-  discount_percent: 8,
-  min_order_amount: 0,
-  starts_at: nil,
-  ends_at: nil,
-  active: true
+set_offer(
+  "Beauty Basket Offer",
+  {
+    kind: :category_discount,
+    category: categories["Beauty & Personal Care"],
+    starts_at: nil,
+    ends_at: nil,
+    active: true
+  },
+  [
+    { minimum_value: 1_000, discount_percent: 5 },
+    { minimum_value: 2_500, discount_percent: 10 },
+    { minimum_value: 5_000, discount_percent: 15 }
+  ]
 )
 
-audio_offer = Promotion.find_or_initialize_by(name: "Audio Offer")
-audio_offer.update!(
-  kind: :category_discount,
-  category: audio,
-  discount_percent: 5,
-  min_order_amount: 0,
-  starts_at: nil,
-  ends_at: nil,
-  active: true
+set_offer(
+  "Electronics Upgrade Offer",
+  {
+    kind: :category_discount,
+    category: categories["Electronics"],
+    starts_at: nil,
+    ends_at: nil,
+    active: true
+  },
+  [
+    { minimum_value: 25_000, discount_percent: 5 },
+    { minimum_value: 60_000, discount_percent: 8 },
+    { minimum_value: 100_000, discount_percent: 10 }
+  ]
 )
 
-store_sale = Promotion.find_or_initialize_by(name: "Store Sale")
-store_sale.update!(
-  kind: :sale,
-  discount_percent: 3,
-  min_order_amount: 0,
-  starts_at: Time.current.beginning_of_day,
-  ends_at: 30.days.from_now.end_of_day,
-  active: true
+set_offer(
+  "#{seller.name} Store Sale",
+  {
+    kind: :sale,
+    seller: seller,
+    starts_at: Time.current.beginning_of_day,
+    ends_at: 60.days.from_now.end_of_day,
+    active: true
+  },
+  [
+    { minimum_value: 5_000, discount_percent: 10 },
+    { minimum_value: 10_000, discount_percent: 15 },
+    { minimum_value: 25_000, discount_percent: 20 }
+  ]
 )
 
-puts "Seed data is ready."
-puts "#{User.count} users"
+puts "Demo marketplace data is ready."
 puts "#{Category.count} categories"
 puts "#{Product.count} products"
 puts "#{Promotion.count} promotions"
+puts "Existing users and marketplace records were not deleted."

@@ -12,24 +12,12 @@
 
   <div class="form-group">
     <%= form.label :kind, "Promotion type", class: "form-label" %>
-    <%= form.select :kind, Promotion.kinds.keys.map { |kind| [kind.titleize, kind] }, {}, class: "form-control" %>
+    <%= form.select :kind, Promotion.kinds.keys.map { |kind| [kind == "sale" ? "Store Sale" : kind.titleize, kind] }, {}, class: "form-control" %>
   </div>
 
   <div class="form-group">
     <%= form.label :code, "Code (coupon only)", class: "form-label" %>
     <%= form.text_field :code, class: "form-control" %>
-  </div>
-
-  <div class="form-row">
-    <div class="form-group">
-      <%= form.label :discount_percent, "Discount percentage", class: "form-label" %>
-      <%= form.number_field :discount_percent, min: 1, max: 100, class: "form-control", required: true %>
-    </div>
-
-    <div class="form-group">
-      <%= form.label :min_order_amount, "Minimum cart value", class: "form-label" %>
-      <%= form.number_field :min_order_amount, min: 0, step: 0.01, class: "form-control", required: true %>
-    </div>
   </div>
 
   <div class="form-group">
@@ -40,6 +28,11 @@
   <div class="form-group">
     <%= form.label :category_id, "Category (category discount only)", class: "form-label" %>
     <%= form.collection_select :category_id, @categories, :id, :name, { include_blank: "No category" }, class: "form-control" %>
+  </div>
+
+  <div class="form-group">
+    <%= form.label :seller_id, "Seller / brand (store sale only)", class: "form-label" %>
+    <%= form.collection_select :seller_id, @sellers, :id, :name, { include_blank: "No seller" }, class: "form-control" %>
   </div>
 
   <div class="form-row">
@@ -53,6 +46,35 @@
       <%= form.datetime_local_field :ends_at, class: "form-control" %>
     </div>
   </div>
+
+  <h3>Discount ladder</h3>
+  <p class="muted">Product offers use quantity. Category offers, coupons and store sales use amount.</p>
+
+  <%= form.fields_for :tiers do |tier| %>
+    <div class="form-row tier-row">
+      <div class="form-group">
+        <%= tier.label :minimum_value,
+                       promotion.product_discount? ? "Minimum items" : "Minimum amount",
+                       class: "form-label" %>
+        <%= tier.number_field :minimum_value,
+                              min: promotion.product_discount? ? 1 : 0,
+                              step: promotion.product_discount? ? 1 : 0.01,
+                              class: "form-control" %>
+      </div>
+
+      <div class="form-group">
+        <%= tier.label :discount_percent, "Discount %", class: "form-label" %>
+        <%= tier.number_field :discount_percent, min: 1, max: 100, class: "form-control" %>
+      </div>
+
+      <% if tier.object.persisted? %>
+        <div class="form-group tier-remove">
+          <%= tier.check_box :_destroy %>
+          <%= tier.label :_destroy, "Remove" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
 
   <div class="form-group">
     <%= form.check_box :active %>

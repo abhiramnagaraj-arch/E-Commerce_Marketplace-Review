@@ -3,9 +3,23 @@ module Buyer
     before_action :set_cart
 
     def show
-      @cart_items = @cart.cart_items.includes(:product)
-      @promotion = current_promotion(@cart_items)
-      @summary = @cart.summary(@promotion)
+      @all_cart_items = @cart.cart_items.includes(product: :category).to_a
+      @cart_items, @items_page, @items_total_pages = paginate(@all_cart_items, per_page: 5, param: :items_page)
+      @offers = available_offers(@all_cart_items).map do |offer|
+        offer.details(@all_cart_items, current_user)
+      end
+      @best = @offers.select { |info| info[:level] }.max_by { |info| info[:saving] }
+      @offers.sort_by! do |info|
+        [ info[:level] ? 0 : 1, info[:used] ? 1 : 0, info[:level] ? -info[:saving] : info[:left] ]
+      end
+      selected = @offers.find do |info|
+        info[:offer].id == session[:promotion_id].to_i && info[:level]
+      end
+      selected ||= @best
+      @promotion = selected&.fetch(:offer)
+      @picked_id = @promotion&.id
+      @promotion ? session[:promotion_id] = @promotion.id : session.delete(:promotion_id)
+      @summary = @cart.summary(@promotion, items: @all_cart_items)
       render "carts/show"
     end
 
@@ -44,22 +58,16 @@ module Buyer
       respond_with_cart_update("Cart updated.")
     end
 
-    def apply_promotion
-      code = params[:promotion_code].to_s.strip
-      items = @cart.cart_items.includes(:product)
-      promotion = Promotion.best_for(items, code: code)
+    def pick_offer
+      items = @cart.cart_items.includes(product: :category).to_a
+      offer = available_offers(items).find_by(id: params[:promotion_id])
 
-      if promotion
-        session[:promotion_code] = promotion.code
-        redirect_back fallback_location: products_path, notice: "#{promotion.name} was applied."
+      if offer&.fits?(items, current_user)
+        session[:promotion_id] = offer.id
+        redirect_to buyer_cart_path, notice: "#{offer.name} selected."
       else
-        redirect_back fallback_location: products_path, alert: "Promotion code is invalid or does not meet the cart requirements."
+        redirect_to buyer_cart_path, alert: "This offer is not unlocked yet."
       end
-    end
-
-    def remove_promotion
-      session.delete(:promotion_code)
-      redirect_back fallback_location: products_path, notice: "Promotion was removed."
     end
 
     private
@@ -70,6 +78,16 @@ module Buyer
 
     def cart_item
       @cart.cart_items.find(params[:id])
+    end
+
+    def available_offers(items)
+      Promotion.live
+        .includes(:tiers, :product, :category, :seller)
+        .for_cart(
+          items.map(&:product_id),
+          items.map { |item| item.product.category_id }.uniq,
+          items.map { |item| item.product.seller_id }.uniq
+        )
     end
 
     def respond_with_cart_update(message, alert: false)

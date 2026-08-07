@@ -15,7 +15,7 @@ class Cart < ApplicationRecord
   def summary(promotion = nil, items: nil)
     items = items || cart_items.includes(:product).to_a
     subtotal = items.sum(&:total_price)
-    line_discounts = promotion ? promotion.discounts_for(items) : {}
+    line_discounts = promotion ? promotion.discounts(items) : {}
     discount = line_discounts.values.sum
 
     {

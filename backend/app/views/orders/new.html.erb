@@ -45,7 +45,7 @@
 
   <div class="cart-container" style="position: sticky; top: 100px;">
     <h3 style="font-size: 1.35rem; font-weight: 700; margin-bottom: 1.5rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">
-      Order Review (<%= @summary[:item_count] %> items)
+      Cart Details (<%= @summary[:item_count] %> items)
     </h3>
 
     <div style="margin-bottom: 1.5rem;">
@@ -58,6 +58,8 @@
           <span style="font-weight: 600;">₹<%= number_with_precision(item.total_price, precision: 2) %></span>
         </div>
       <% end %>
+
+      <%= render "shared/pagination", page: @items_page, total_pages: @items_total_pages, param: :items_page %>
     </div>
 
     <div class="summary-row">

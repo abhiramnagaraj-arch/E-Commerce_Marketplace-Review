@@ -55,7 +55,7 @@ bundle install
 ---
 
 ### Step 4: Create Database, Run Migrations, & Seed Sample Data
-Run the following Rails database commands to automatically create the PostgreSQL tables and populate them with sample products, categories, and promo coupons:
+Run the following Rails database commands to create the PostgreSQL tables and load the marketplace demo data:
 
 ```bash
 rails db:create
@@ -64,9 +64,11 @@ rails db:seed
 ```
 
 > **What `db:seed` generates:**
-> - **3 Categories:** Laptops & Computing, Audio & Headphones, Tech Accessories
-> - **6 Premium Products:** MacBook Air M3, ThinkPad X1 Carbon, Sony XM5 Headphones, AirPods Pro 2, Logitech MX Master 3S, Keychron Q1 Pro
-> - **2 Promo Coupons:** `WELCOME10` (10% off any order) and `MEGA20` (20% off orders above ₹5,000)
+> - **8 major categories** including Electronics, Fashion, Grocery, Books, Beauty, Home, Sports, and Toys
+> - **25 realistic demo products** across low-, medium-, and high-value carts
+> - **Ladder promotions** for products, categories, coupons, and store-wide sales
+>
+> The seed is non-destructive. It does not delete registered users or existing marketplace records.
 
 ---
 
@@ -105,7 +107,5 @@ Categories (id, name, description)
 
 ---
 
-## 🎟️ Testing Promo Coupon Codes
-During your demo or testing, try entering these coupon codes in the Shopping Cart (`/cart`):
-- `WELCOME10` — Instantly deducts **10%** from the subtotal.
-- `MEGA20` — Instantly deducts **20%** on orders with a subtotal of ₹5,000 or higher.
+## 🎟️ Testing Promotions
+Add products to the cart to view every available offer. The cart recommends the highest current saving, but the buyer chooses which single promotion to use. Coupon `SHOPMORE` is listed in the cart and does not need to be typed.

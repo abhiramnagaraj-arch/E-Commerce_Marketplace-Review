@@ -35,15 +35,22 @@ class ApplicationController < ActionController::Base
   end
 
   def current_promotion(items)
-    code = session[:promotion_code]
-    promotion = Promotion.best_for(items, code: code)
-    return promotion if promotion || code.blank?
-
-    session.delete(:promotion_code)
-    Promotion.best_for(items)
+    promotion = Promotion.live.includes(:tiers).find_by(id: session[:promotion_id])
+    promotion if promotion&.fits?(items, current_user)
   end
 
   def cart_item_count
     current_cart&.cart_items&.sum(:quantity) || 0
+  end
+
+  def paginate(collection, per_page:, param: :page)
+    total = collection.count
+    pages = [ (total.to_f / per_page).ceil, 1 ].max
+    page = params[param].to_i
+    page = 1 if page < 1
+    page = [ page, pages ].min
+    offset = (page - 1) * per_page
+    records = collection.respond_to?(:offset) ? collection.offset(offset).limit(per_page) : collection.slice(offset, per_page).to_a
+    [ records, page, pages, total ]
   end
 end
