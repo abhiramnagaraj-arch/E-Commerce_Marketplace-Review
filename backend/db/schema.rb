@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_06_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_10_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -41,6 +41,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_06_130000) do
   end
 
   create_table "order_items", force: :cascade do |t|
+    t.text "cancel_reason"
+    t.datetime "canceled_at"
     t.datetime "created_at", null: false
     t.decimal "discount_amount", precision: 10, scale: 2, default: "0.0", null: false
     t.decimal "final_amount", precision: 10, scale: 2, default: "0.0", null: false
@@ -49,7 +51,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_06_130000) do
     t.bigint "product_id", null: false
     t.string "product_title", null: false
     t.integer "quantity", default: 1
+    t.datetime "rejected_at"
+    t.text "rejection_reason"
     t.bigint "seller_order_id", null: false
+    t.string "status", default: "confirmed", null: false
     t.decimal "subtotal", precision: 10, scale: 2, default: "0.0", null: false
     t.datetime "updated_at", null: false
     t.index ["order_id"], name: "index_order_items_on_order_id"
@@ -81,12 +86,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_06_130000) do
 
   create_table "products", force: :cascade do |t|
     t.boolean "active", default: true, null: false
+    t.string "brand"
     t.bigint "category_id", null: false
     t.datetime "created_at", null: false
     t.text "description"
     t.decimal "price", precision: 10, scale: 2
     t.bigint "seller_id", null: false
-    t.text "specifications"
+    t.jsonb "specifications", default: {}, null: false
     t.integer "stock", default: 0
     t.string "title"
     t.datetime "updated_at", null: false
@@ -130,8 +136,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_06_130000) do
   create_table "seller_orders", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "order_id", null: false
-    t.datetime "rejected_at"
-    t.text "rejection_reason"
     t.bigint "seller_id", null: false
     t.string "status", default: "confirmed", null: false
     t.datetime "updated_at", null: false

@@ -45,12 +45,21 @@ class ApplicationController < ActionController::Base
 
   def paginate(collection, per_page:, param: :page)
     total = collection.count
-    pages = [ (total.to_f / per_page).ceil, 1 ].max
+    total_pages = (total.to_f / per_page).ceil
+    total_pages = 1 if total_pages.zero?
+
     page = params[param].to_i
     page = 1 if page < 1
-    page = [ page, pages ].min
+    page = total_pages if page > total_pages
+
     offset = (page - 1) * per_page
-    records = collection.respond_to?(:offset) ? collection.offset(offset).limit(per_page) : collection.slice(offset, per_page).to_a
-    [ records, page, pages, total ]
+
+    records = if collection.is_a?(Array)
+      collection[offset, per_page] || []
+    else
+      collection.offset(offset).limit(per_page)
+    end
+
+    [ records, page, total_pages, total ]
   end
 end

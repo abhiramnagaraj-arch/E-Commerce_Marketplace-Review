@@ -3,22 +3,10 @@ module Buyer
     before_action :set_cart
 
     def show
-      @all_cart_items = @cart.cart_items.includes(product: :category).to_a
-      @cart_items, @items_page, @items_total_pages = paginate(@all_cart_items, per_page: 5, param: :items_page)
-      @offers = available_offers(@all_cart_items).map do |offer|
-        offer.details(@all_cart_items, current_user)
-      end
-      @best = @offers.select { |info| info[:level] }.max_by { |info| info[:saving] }
-      @offers.sort_by! do |info|
-        [ info[:level] ? 0 : 1, info[:used] ? 1 : 0, info[:level] ? -info[:saving] : info[:left] ]
-      end
-      selected = @offers.find do |info|
-        info[:offer].id == session[:promotion_id].to_i && info[:level]
-      end
-      selected ||= @best
-      @promotion = selected&.fetch(:offer)
-      @picked_id = @promotion&.id
-      @promotion ? session[:promotion_id] = @promotion.id : session.delete(:promotion_id)
+      load_cart_items
+      load_cart_offers
+      select_cart_offer
+
       @summary = @cart.summary(@promotion, items: @all_cart_items)
       render "carts/show"
     end
@@ -64,6 +52,7 @@ module Buyer
 
       if offer&.fits?(items, current_user)
         session[:promotion_id] = offer.id
+        session[:promotion_manually_picked] = true
         redirect_to buyer_cart_path, notice: "#{offer.name} selected."
       else
         redirect_to buyer_cart_path, alert: "This offer is not unlocked yet."
@@ -71,6 +60,54 @@ module Buyer
     end
 
     private
+
+    def load_cart_items
+      @all_cart_items = @cart.cart_items.includes(product: :category).to_a
+      @cart_items, @items_page, @items_total_pages = paginate(
+        @all_cart_items,
+        per_page: 5,
+        param: :items_page
+      )
+    end
+
+    def load_cart_offers
+      @offers = available_offers(@all_cart_items).map do |offer|
+        offer.details(@all_cart_items, current_user)
+      end.reject { |info| info[:used] }
+
+      unlocked = @offers.select { |info| info[:level] }
+      locked = @offers. reject { |info| info[:level] }
+
+      unlocked.sort_by! { |info| -info[:saving] }
+      locked.sort_by! do |info|
+        used_position = info[:used] ? 1 : 0
+        [ used_position, info[:left] ]
+      end
+
+      @offers = unlocked + locked
+      @best = unlocked.first
+      @recommended_id = @best&.dig(:offer)&.id
+    end
+
+    def select_cart_offer
+      selected = if session[:promotion_manually_picked]
+        @offers.find do |info|
+          info[:offer].id == session[:promotion_id].to_i && info[:level]
+        end
+      end
+
+      session.delete(:promotion_manually_picked) unless selected
+      selected ||= @best
+
+      @promotion = selected&.fetch(:offer)
+      @picked_id = @promotion&.id
+
+      if @promotion
+        session[:promotion_id] = @promotion.id
+      else
+        session.delete(:promotion_id)
+      end
+    end
 
     def set_cart
       @cart = current_cart

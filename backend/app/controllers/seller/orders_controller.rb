@@ -1,6 +1,7 @@
 module Seller
   class OrdersController < BaseController
-    before_action :set_seller_order, only: %i[show process_order ship deliver reject]
+    before_action :set_seller_order, only: %i[show process_item ship_item deliver_item reject_item]
+    before_action :set_order_item, only: %i[process_item ship_item deliver_item reject_item]
 
     def index
       @seller_orders = current_user.seller_orders.includes(:order, :order_items).order(created_at: :desc)
@@ -8,38 +9,38 @@ module Seller
 
     def show
       @order = @seller_order.order
-      @order_items = @seller_order.order_items
+      @order_items = @seller_order.order_items.order(:id)
     end
 
-    def process_order
-      if @seller_order.process!
-        redirect_to seller_order_path(@seller_order), notice: "Order is now processing."
+    def process_item
+      if @order_item.process!
+        redirect_with_notice("Item is now processing.")
       else
-        redirect_with_error("Order cannot be processed.")
+        redirect_with_error("Item cannot be processed.")
       end
     end
 
-    def ship
-      if @seller_order.ship!
-        redirect_to seller_order_path(@seller_order), notice: "Order was marked as shipped."
+    def ship_item
+      if @order_item.ship!
+        redirect_with_notice("Item was marked as shipped.")
       else
-        redirect_with_error("Order cannot be shipped.")
+        redirect_with_error("Item cannot be shipped.")
       end
     end
 
-    def deliver
-      if @seller_order.deliver!
-        redirect_to seller_order_path(@seller_order), notice: "Order was marked as delivered."
+    def deliver_item
+      if @order_item.deliver!
+        redirect_with_notice("Item was marked as delivered.")
       else
-        redirect_with_error("Order cannot be delivered.")
+        redirect_with_error("Item cannot be delivered.")
       end
     end
 
-    def reject
-      if @seller_order.reject_order(params[:rejection_reason])
-        redirect_to seller_order_path(@seller_order), notice: "Order was rejected and stock was restored."
+    def reject_item
+      if @order_item.reject_item(params[:rejection_reason])
+        redirect_with_notice("Item was rejected and its stock was restored.")
       else
-        redirect_with_error(@seller_order.errors.full_messages.to_sentence)
+        redirect_with_error(@order_item.errors.full_messages.to_sentence)
       end
     end
 
@@ -47,6 +48,14 @@ module Seller
 
     def set_seller_order
       @seller_order = current_user.seller_orders.find(params[:id])
+    end
+
+    def set_order_item
+      @order_item = @seller_order.order_items.find(params[:item_id])
+    end
+
+    def redirect_with_notice(message)
+      redirect_to seller_order_path(@seller_order), notice: message
     end
 
     def redirect_with_error(message)

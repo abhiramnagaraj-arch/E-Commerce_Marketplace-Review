@@ -16,6 +16,7 @@ Rails.application.routes.draw do
     end
     resources :orders, only: %i[index show new create] do
       patch :cancel, on: :member
+      patch :cancel_item, on: :member
     end
   end
 
@@ -24,10 +25,10 @@ Rails.application.routes.draw do
     resources :products
     resources :categories, only: %i[index show]
     resources :orders, only: %i[index show] do
-      patch :process_order, on: :member
-      patch :ship, on: :member
-      patch :deliver, on: :member
-      patch :reject, on: :member
+      patch :process_item, on: :member
+      patch :ship_item, on: :member
+      patch :deliver_item, on: :member
+      patch :reject_item, on: :member
     end
   end
 

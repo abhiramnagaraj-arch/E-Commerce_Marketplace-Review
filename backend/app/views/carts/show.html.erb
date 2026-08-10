@@ -41,7 +41,7 @@
               <% if offer.code.present? %>
                 <span class="offer-code"><%= offer.code %></span>
               <% end %>
-              <% if info.equal?(@best) %>
+              <% if @recommended_id == offer.id %>
                 <span class="recommended">Recommended</span>
               <% end %>
 
@@ -61,8 +61,6 @@
                     to unlock <%= info[:next].discount_percent %>% off.
                   </p>
                 <% end %>
-              <% elsif info[:used] %>
-                <p class="muted">You have already used this coupon.</p>
               <% else %>
                 <p class="muted">
                   <% if offer.product_discount? %>

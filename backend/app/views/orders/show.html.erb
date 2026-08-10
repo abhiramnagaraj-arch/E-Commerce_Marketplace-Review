@@ -22,13 +22,32 @@
 
     <% seller_order.order_items.each do |item| %>
       <div class="list-row">
-        <span><%= item.product_title %> × <%= item.quantity %></span>
-        <strong>₹<%= number_with_precision(item.final_amount, precision: 2) %></strong>
+        <div>
+          <strong><%= item.product_title %> × <%= item.quantity %></strong>
+          <p class="muted">Status: <%= item.status.titleize %></p>
+          <% if item.rejected? %>
+            <p class="muted">Rejected: <%= item.rejection_reason %></p>
+          <% elsif item.canceled? %>
+            <p class="muted">Canceled: <%= item.cancel_reason %></p>
+          <% end %>
+        </div>
+        <strong>
+          <%= item.rejected? || item.canceled? ? "Refund" : "Paid" %>
+          ₹<%= number_with_precision(item.final_amount, precision: 2) %>
+        </strong>
       </div>
-    <% end %>
 
-    <% if seller_order.rejected? %>
-      <p><strong>Rejected:</strong> <%= seller_order.rejection_reason %></p>
+      <% if item.may_cancel? %>
+        <%= form_with url: cancel_item_buyer_order_path(@order, item_id: item.id),
+                      method: :patch,
+                      class: "form-card" do |form| %>
+          <div class="form-group">
+            <%= form.label :cancel_reason, "Cancellation reason", class: "form-label" %>
+            <%= form.text_area :cancel_reason, rows: 2, class: "form-control", required: true %>
+          </div>
+          <%= form.submit "Cancel item", class: "btn btn-danger", data: { turbo_confirm: "Cancel this item?" } %>
+        <% end %>
+      <% end %>
     <% end %>
   </div>
 <% end %>
@@ -55,7 +74,7 @@
 <% if @order.may_cancel_order? %>
   <%= form_with url: cancel_buyer_order_path(@order), method: :patch, class: "form-card" do |form| %>
     <h2>Cancel order</h2>
-    <p class="muted">You can cancel while no seller has shipped an item.</p>
+    <p class="muted">You can cancel while no item has shipped.</p>
 
     <div class="form-group">
       <%= form.label :cancel_reason, "Reason", class: "form-label" %>

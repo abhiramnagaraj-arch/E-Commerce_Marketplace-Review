@@ -36,6 +36,8 @@ category_data.each do |name, description|
   categories[name] = category
 end
 
+load Rails.root.join("db/seeds/product_brands.rb")
+
 product_data = [
   [ "Samsung Galaxy S24", "Electronics", 69_999, 20, "AI smartphone with AMOLED display and premium cameras." ],
   [ "ASUS Vivobook 15", "Electronics", 52_990, 12, "Everyday laptop with 16GB memory and 512GB SSD." ],
@@ -70,6 +72,7 @@ product_data.each do |title, category_name, price, stock, description|
   product = Product.find_or_initialize_by(title: title, seller: seller)
   product.update!(
     category: categories[category_name],
+    brand: PRODUCT_BRANDS.fetch(title, seller.name),
     price: price,
     stock: stock,
     description: description,
@@ -202,6 +205,8 @@ set_offer(
     { minimum_value: 25_000, discount_percent: 20 }
   ]
 )
+
+load Rails.root.join("db/seeds/product_specifications.rb")
 
 puts "Demo marketplace data is ready."
 puts "#{Category.count} categories"

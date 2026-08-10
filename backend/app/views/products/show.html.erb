@@ -8,6 +8,7 @@
     <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
       <div>
         <h1 style="font-size: 2.4rem; font-weight: 700; margin-bottom: 0.5rem;"><%= @product.title %></h1>
+        <p style="color: var(--text-muted); font-size: 1.05rem;">Brand: <%= @product.brand %></p>
         <p style="color: var(--text-muted); font-size: 1.05rem;">Category: <%= @product.category.name %></p>
         <p style="color: var(--text-muted); font-size: 1.05rem;">Sold by: <%= @product.seller.name %></p>
       </div>
@@ -23,7 +24,14 @@
     <div class="list-card" style="margin-bottom: 1.5rem;">
       <h2>Specifications</h2>
       <% if @product.specifications.present? %>
-        <%= simple_format(@product.specifications) %>
+        <dl class="detail-list">
+          <% @product.specifications.each do |key, value| %>
+            <div>
+              <dt><%= key %></dt>
+              <dd><%= value %></dd>
+            </div>
+          <% end %>
+        </dl>
       <% else %>
         <p class="muted">No specifications provided.</p>
       <% end %>

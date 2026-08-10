@@ -8,13 +8,8 @@
 
 <div class="simple-grid">
   <div class="list-card">
-    <h2>Your items</h2>
-    <% @order_items.each do |item| %>
-      <div class="list-row">
-        <span><%= item.product_title %> × <%= item.quantity %></span>
-        <strong>₹<%= number_with_precision(item.subtotal, precision: 2) %></strong>
-      </div>
-    <% end %>
+    <h2>Order summary</h2>
+    <p><%= @order_items.size %> product lines</p>
     <div class="summary-row summary-total">
       <span>Your total</span>
       <span>₹<%= number_with_precision(@seller_order.seller_total, precision: 2) %></span>
@@ -29,32 +24,53 @@
   </div>
 </div>
 
-<div class="list-card">
-  <h2>Order actions</h2>
+<% @order_items.each do |item| %>
+  <div class="list-card">
+    <div class="section-heading">
+      <div>
+        <h2><%= item.product_title %> × <%= item.quantity %></h2>
+        <p class="muted">₹<%= number_with_precision(item.final_amount, precision: 2) %></p>
+      </div>
+      <strong><%= item.status.titleize %></strong>
+    </div>
 
-  <div class="actions">
-    <% if @seller_order.may_process? %>
-      <%= button_to "Start processing", process_order_seller_order_path(@seller_order), method: :patch, class: "btn btn-primary" %>
-    <% end %>
+    <div class="actions">
+      <% if item.may_process? %>
+        <%= button_to "Start processing",
+                      process_item_seller_order_path(@seller_order, item_id: item.id),
+                      method: :patch,
+                      class: "btn btn-primary" %>
+      <% end %>
 
-    <% if @seller_order.may_ship? %>
-      <%= button_to "Mark as shipped", ship_seller_order_path(@seller_order), method: :patch, class: "btn btn-primary" %>
-    <% end %>
+      <% if item.may_ship? %>
+        <%= button_to "Mark as shipped",
+                      ship_item_seller_order_path(@seller_order, item_id: item.id),
+                      method: :patch,
+                      class: "btn btn-primary" %>
+      <% end %>
 
-    <% if @seller_order.may_deliver? %>
-      <%= button_to "Mark as delivered", deliver_seller_order_path(@seller_order), method: :patch, class: "btn btn-primary" %>
+      <% if item.may_deliver? %>
+        <%= button_to "Mark as delivered",
+                      deliver_item_seller_order_path(@seller_order, item_id: item.id),
+                      method: :patch,
+                      class: "btn btn-primary" %>
+      <% end %>
+    </div>
+
+    <% if item.may_reject? %>
+      <%= form_with url: reject_item_seller_order_path(@seller_order, item_id: item.id),
+                    method: :patch,
+                    class: "form-card" do |form| %>
+        <div class="form-group">
+          <%= form.label :rejection_reason, "Rejection reason", class: "form-label" %>
+          <%= form.text_area :rejection_reason, rows: 2, class: "form-control", required: true %>
+        </div>
+        <%= form.submit "Reject item", class: "btn btn-danger", data: { turbo_confirm: "Reject this item?" } %>
+      <% end %>
+    <% elsif item.rejected? %>
+      <p><strong>Rejected:</strong> <%= item.rejection_reason %></p>
+    <% elsif item.canceled? %>
+      <p><strong>Canceled by buyer:</strong> <%= item.cancel_reason %></p>
     <% end %>
   </div>
-
-  <% if @seller_order.may_reject? %>
-    <%= form_with url: reject_seller_order_path(@seller_order), method: :patch, class: "form-card" do |form| %>
-      <div class="form-group">
-        <%= form.label :rejection_reason, "Rejection reason", class: "form-label" %>
-        <%= form.text_area :rejection_reason, rows: 3, class: "form-control", required: true %>
-      </div>
-      <%= form.submit "Reject order", class: "btn btn-danger", data: { turbo_confirm: "Reject this order?" } %>
-    <% end %>
-  <% elsif @seller_order.rejected? %>
-    <p><strong>Rejection reason:</strong> <%= @seller_order.rejection_reason %></p>
-  <% end %>
-</div>
+<% end %>

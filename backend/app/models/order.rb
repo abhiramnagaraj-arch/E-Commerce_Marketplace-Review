@@ -62,18 +62,18 @@ class Order < ApplicationRecord
 
     self.class.transaction do
       lock!
-      parts = seller_orders.order(:id).reject do |part|
-        part.rejected? || part.canceled?
+      items = order_items.order(:id).reject do |item|
+        item.rejected? || item.canceled?
       end
 
-      if parts.empty? || parts.any? { |part| !part.may_cancel? }
+      if items.empty? || items.any? { |item| !item.may_cancel? }
         errors.add(:base, "This order can no longer be canceled because an item has shipped.")
         raise ActiveRecord::Rollback
       end
 
-      parts.each do |part|
-        unless part.cancel_by_buyer
-          errors.add(:base, part.errors.full_messages.to_sentence)
+      items.each do |item|
+        unless item.cancel_by_buyer(reason)
+          errors.add(:base, item.errors.full_messages.to_sentence)
           raise ActiveRecord::Rollback
         end
       end
@@ -86,38 +86,39 @@ class Order < ApplicationRecord
   end
 
   def may_cancel_order?
-    parts = seller_orders.reject { |part| part.rejected? || part.canceled? }
-    parts.any? && parts.all?(&:may_cancel?)
+    items = order_items.reject { |item| item.rejected? || item.canceled? }
+    items.any? && items.all?(&:may_cancel?)
   end
 
   def refresh_status
     with_lock do
-      active_parts = seller_orders.reload.reject do |part|
-        part.rejected? || part.canceled?
+      items = order_items.reload.to_a
+      active_items = items.reject do |item|
+        item.rejected? || item.canceled?
       end
 
       new_status =
-        if active_parts.empty?
+        if active_items.empty?
           "canceled"
-        elsif active_parts.all?(&:delivered?)
+        elsif active_items.all?(&:delivered?)
           "delivered"
-        elsif active_parts.any?(&:delivered?)
+        elsif active_items.any?(&:delivered?)
           "partially_delivered"
-        elsif active_parts.all? { |part| part.shipped? || part.delivered? }
+        elsif active_items.all? { |item| item.shipped? || item.delivered? }
           "shipped"
-        elsif active_parts.any? { |part| part.processing? || part.shipped? || part.delivered? }
+        elsif active_items.any? { |item| item.processing? || item.shipped? }
           "processing"
         else
           "confirmed"
         end
 
-      active_items = order_items.where(seller_order: active_parts)
+      active_records = order_items.where.not(status: %w[rejected canceled])
 
       update!(
         status: new_status,
-        total_amount: active_items.sum(:subtotal),
-        discount_amount: active_items.sum(:discount_amount),
-        final_amount: active_items.sum(:final_amount)
+        total_amount: active_records.sum(:subtotal),
+        discount_amount: active_records.sum(:discount_amount),
+        final_amount: active_records.sum(:final_amount)
       )
     end
   end

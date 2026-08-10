@@ -25,10 +25,17 @@
         <div>
           <strong><%= item.product_title %> × <%= item.quantity %></strong>
           <p class="muted">
+            Status: <%= item.status.titleize %> ·
             Listed: ₹<%= number_with_precision(item.subtotal, precision: 2) %> ·
             Discount: ₹<%= number_with_precision(item.discount_amount, precision: 2) %> ·
-            Buyer paid: ₹<%= number_with_precision(item.final_amount, precision: 2) %>
+            <%= item.rejected? || item.canceled? ? "Refund" : "Buyer paid" %>:
+            ₹<%= number_with_precision(item.final_amount, precision: 2) %>
           </p>
+          <% if item.rejected? %>
+            <p class="muted">Rejected: <%= item.rejection_reason %></p>
+          <% elsif item.canceled? %>
+            <p class="muted">Canceled by buyer: <%= item.cancel_reason %></p>
+          <% end %>
         </div>
       </div>
     <% end %>
@@ -41,10 +48,6 @@
       <span>Store discount</span>
       <span>₹<%= number_with_precision(seller_order.promotion_total, precision: 2) %></span>
     </div>
-
-    <% if seller_order.rejected? %>
-      <p><strong>Rejection reason:</strong> <%= seller_order.rejection_reason %></p>
-    <% end %>
   </div>
 <% end %>
 

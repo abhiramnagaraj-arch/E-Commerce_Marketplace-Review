@@ -201,6 +201,13 @@ product_specifications = {
   TEXT
 }
 
+product_specifications.transform_values! do |text|
+  text.lines.filter_map do |line|
+    key, value = line.strip.split(":", 2)
+    [ key.strip, value.strip ] if key.present? && value.present?
+  end.to_h
+end
+
 updated = 0
 skipped = 0
 missing = []

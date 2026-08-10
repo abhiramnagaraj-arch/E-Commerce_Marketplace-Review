@@ -1,6 +1,7 @@
 module Buyer
   class OrdersController < BaseController
-    before_action :set_order, only: %i[show cancel]
+    before_action :set_order, only: %i[show cancel cancel_item]
+    before_action :set_order_item, only: :cancel_item
     before_action :set_cart, only: %i[new create]
     before_action :set_summary, only: %i[new create]
 
@@ -24,6 +25,7 @@ module Buyer
 
       if @order.place_from_cart(@cart, @promotion)
         session.delete(:promotion_id)
+        session.delete(:promotion_manually_picked)
         redirect_to buyer_order_path(@order), notice: "Order placed successfully! Thank you for shopping with us."
       else
         render "orders/new", status: :unprocessable_entity
@@ -38,6 +40,14 @@ module Buyer
       end
     end
 
+    def cancel_item
+      if @order_item.cancel_by_buyer(params[:cancel_reason])
+        redirect_to buyer_order_path(@order), notice: "Item canceled and stock restored."
+      else
+        redirect_to buyer_order_path(@order), alert: @order_item.errors.full_messages.to_sentence
+      end
+    end
+
     private
 
     def set_cart
@@ -47,6 +57,10 @@ module Buyer
 
     def set_order
       @order = current_user.orders.find(params[:id])
+    end
+
+    def set_order_item
+      @order_item = @order.order_items.find(params[:item_id])
     end
 
     def set_summary

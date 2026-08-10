@@ -53,7 +53,19 @@
       end
 
       def product_params
-        params.require(:product).permit(:title, :description, :specifications, :price, :stock, :category_id, :active)
+        product = params.require(:product).permit(
+          :title, :brand, :description, :price, :stock, :category_id, :active,
+          specification_rows: %i[key value]
+        )
+
+        rows = product.delete(:specification_rows) || []
+        product[:specifications] = rows.each_with_object({}) do |row, specifications|
+          key = row[:key].to_s.strip
+          value = row[:value].to_s.strip
+          specifications[key] = value if key.present? && value.present?
+        end
+
+        product
       end
     end
   end
