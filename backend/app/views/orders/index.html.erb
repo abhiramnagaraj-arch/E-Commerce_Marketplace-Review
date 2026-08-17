@@ -18,7 +18,7 @@
             Customer: <strong><%= order.customer_name %></strong> (<%= order.customer_email %>) • Placed on <%= order.created_at.strftime("%b %d, %Y") %>
           </p>
           <div style="margin-top: 0.5rem; font-size: 0.95rem;">
-            <%= order.order_items.count %> items — 
+            <%= order.order_items.size %> items —
             <% order.order_items.each do |item| %>
               <span style="display: inline-block; background: var(--background); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.8rem; margin-right: 0.35rem;">
                 <%= item.product_title %> (x<%= item.quantity %>)

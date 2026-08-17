@@ -39,16 +39,16 @@ class SellerOrder < ApplicationRecord
   end
 
   def seller_total
-    active_order_items.sum(:subtotal)
+    active_order_items.sum(&:subtotal)
   end
 
   def promotion_total
-    active_order_items.sum(:discount_amount)
+    active_order_items.sum(&:discount_amount)
   end
 
   private
 
   def active_order_items
-    order_items.where.not(status: %w[rejected canceled])
+    order_items.to_a.reject { |item| item.rejected? || item.canceled? }
   end
 end

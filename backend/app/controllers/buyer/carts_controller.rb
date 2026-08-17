@@ -73,10 +73,10 @@ module Buyer
     def load_cart_offers
       @offers = available_offers(@all_cart_items).map do |offer|
         offer.details(@all_cart_items, current_user)
-      end.reject { |info| info[:used] }
+      end
 
       unlocked = @offers.select { |info| info[:level] }
-      locked = @offers. reject { |info| info[:level] }
+      locked = @offers.reject { |info| info[:level] }
 
       unlocked.sort_by! { |info| -info[:saving] }
       locked.sort_by! do |info|
@@ -119,7 +119,7 @@ module Buyer
 
     def available_offers(items)
       Promotion.live
-        .includes(:tiers, :product, :category, :seller)
+        .includes(:tiers)
         .for_cart(
           items.map(&:product_id),
           items.map { |item| item.product.category_id }.uniq,

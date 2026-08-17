@@ -345,41 +345,10 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-.cart-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 2rem;
-}
-
-.cart-table th {
-  text-align: left;
-  padding: 1rem;
-  border-bottom: 2px solid var(--border);
-  color: var(--text-muted);
-  font-weight: 600;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-}
-
-.cart-table td {
-  padding: 1.25rem 1rem;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-}
-
 .quantity-controls {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.quantity-input {
-  width: 60px;
-  padding: 0.4rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  text-align: center;
-  font-weight: 600;
 }
 
 .quantity-button {
@@ -581,14 +550,6 @@ body {
   gap: 0.75rem;
 }
 
-/* Summary Box */
-.summary-card {
-  background: var(--primary-light);
-  border-radius: var(--radius-md);
-  padding: 1.5rem;
-  margin-top: 1.5rem;
-}
-
 .summary-row {
   display: flex;
   justify-content: space-between;
@@ -720,10 +681,6 @@ body {
   color: var(--text-muted);
 }
 
-.align-right {
-  text-align: right;
-}
-
 .empty-state {
   padding: 2rem 0;
   color: var(--text-muted);
@@ -742,12 +699,6 @@ body {
 
 .detail-list dd {
   margin-top: 0.2rem;
-}
-
-.promotion-box {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
 }
 
 /* Footer */

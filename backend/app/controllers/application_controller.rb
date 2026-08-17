@@ -6,8 +6,8 @@ class ApplicationController < ActionController::Base
 
   def configure_permitted_parameters
     devise_parameter_sanitizer.permit(:sign_up) do |params|
-      permitted = params.permit(:name, :email, :password, :password_confirmation, :role)
-      permitted[:role] = "buyer" unless %w[buyer seller].include?(permitted[:role])
+      permitted = params.permit(:name, :email, :password, :password_confirmation)
+      permitted[:role] = %w[buyer seller].include?(params[:role]) ? params[:role] : "buyer"
       permitted
     end
 
@@ -61,5 +61,14 @@ class ApplicationController < ActionController::Base
     end
 
     [ records, page, total_pages, total ]
+  end
+
+  def load_product_offers(products, category: nil)
+    offers = Promotion.live.includes(:seller).for_product_list(products).to_a
+    @sales = offers.select(&:sale?).uniq(&:id)
+    @category_offers = offers.select do |offer|
+      category && offer.category_discount? && offer.category_id == category.id
+    end
+    @product_offers = offers.select(&:product_discount?).group_by(&:product_id)
   end
 end

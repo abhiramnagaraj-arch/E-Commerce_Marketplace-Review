@@ -1,0 +1,24 @@
+<div class="product-card">
+  <div class="product-image-placeholder">
+    <% if local_assigns.fetch(:show_category, true) %>
+      <span class="category-tag"><%= product.category.name %></span>
+    <% end %>
+    📦
+  </div>
+
+  <div class="product-info">
+    <%= link_to product.title, product, class: "product-title" %>
+    <p class="product-description"><%= product.description %></p>
+
+    <% @product_offers.fetch(product.id, []).each do |offer| %>
+      <%= render "promotions/product_offer", offer: offer %>
+    <% end %>
+
+    <div class="product-footer">
+      <span class="product-price">₹<%= number_with_precision(product.price, precision: 2) %></span>
+      <% if user_signed_in? && current_user.buyer? %>
+        <%= render "products/cart_controls", product: product, cart_item: cart_item_for(product) %>
+      <% end %>
+    </div>
+  </div>
+</div>

@@ -112,13 +112,11 @@ class Order < ApplicationRecord
           "confirmed"
         end
 
-      active_records = order_items.where.not(status: %w[rejected canceled])
-
       update!(
         status: new_status,
-        total_amount: active_records.sum(:subtotal),
-        discount_amount: active_records.sum(:discount_amount),
-        final_amount: active_records.sum(:final_amount)
+        total_amount: active_items.sum(&:subtotal),
+        discount_amount: active_items.sum(&:discount_amount),
+        final_amount: active_items.sum(&:final_amount)
       )
     end
   end
