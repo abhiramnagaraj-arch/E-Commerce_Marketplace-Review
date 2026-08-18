@@ -1,0 +1,5 @@
+<%= turbo_stream.replace dom_id(@product, :cart_controls),
+                         partial: "products/cart_controls",
+                         locals: { product: @product, cart_item: @cart_item } %>
+<%= turbo_stream.replace "cart_item_count", partial: "shared/cart_item_count" %>
+<%= turbo_stream.update "flash_messages", partial: "shared/flash_messages" %>

@@ -1,18 +1,20 @@
 class Order < ApplicationRecord
   has_many :order_items, dependent: :destroy
   has_many :seller_orders, dependent: :destroy
-  has_many :products, through: :order_items
   belongs_to :buyer, class_name: "User", inverse_of: :orders
+  belongs_to :promotion, optional: true
 
   validates :customer_name, :customer_email, :customer_address, presence: true
-  validates :total_amount, :discount_amount, :final_amount,
-            numericality: { greater_than_or_equal_to: 0 }
+  validates :total_amount, :discount_amount, :final_amount, numericality: { greater_than_or_equal_to: 0 }
+  validates :promotion_id,
+    uniqueness: { scope: :buyer_id, message: "coupon has already been used" },
+    if: -> { promotion&.coupon? }
 
   def place_from_cart(cart, promotion = nil)
     placed = false
 
     self.class.transaction do
-      items = cart.cart_items.includes(:product).order(:product_id).to_a
+      items = cart.cart_items.includes(:product).to_a
       items.each { |item| item.product.lock! }
 
       invalid_item = items.find do |item|
@@ -33,6 +35,7 @@ class Order < ApplicationRecord
       self.promotion_name = applied_promotion&.name
       self.promotion_kind = applied_promotion&.kind
       self.promotion_code = applied_promotion&.code
+      self.promotion = applied_promotion
 
       if save
         create_order_items(items, summary[:line_discounts])
@@ -44,7 +47,7 @@ class Order < ApplicationRecord
     end
 
     placed
-  rescue ActiveRecord::RecordInvalid => error
+  rescue ActiveRecord::RecordInvalid, ActiveRecord::RecordNotUnique => error
     errors.add(:base, error.message)
     false
   end
@@ -59,18 +62,18 @@ class Order < ApplicationRecord
 
     self.class.transaction do
       lock!
-      parts = seller_orders.order(:id).reject do |part|
-        part.rejected? || part.canceled?
+      items = order_items.order(:id).reject do |item|
+        item.rejected? || item.canceled?
       end
 
-      if parts.empty? || parts.any? { |part| !part.may_cancel? }
+      if items.empty? || items.any? { |item| !item.may_cancel? }
         errors.add(:base, "This order can no longer be canceled because an item has shipped.")
         raise ActiveRecord::Rollback
       end
 
-      parts.each do |part|
-        unless part.cancel_by_buyer
-          errors.add(:base, part.errors.full_messages.to_sentence)
+      items.each do |item|
+        unless item.cancel_by_buyer(reason)
+          errors.add(:base, item.errors.full_messages.to_sentence)
           raise ActiveRecord::Rollback
         end
       end
@@ -83,36 +86,39 @@ class Order < ApplicationRecord
   end
 
   def may_cancel_order?
-    parts = seller_orders.reject { |part| part.rejected? || part.canceled? }
-    parts.any? && parts.all?(&:may_cancel?)
+    items = order_items.reject { |item| item.rejected? || item.canceled? }
+    items.any? && items.all?(&:may_cancel?)
   end
 
   def refresh_status
-    active_parts = seller_orders.reload.reject do |part|
-      part.rejected? || part.canceled?
-    end
-
-    new_status =
-      if active_parts.empty?
-        "canceled"
-      elsif active_parts.all?(&:delivered?)
-        "delivered"
-      elsif active_parts.all? { |part| part.shipped? || part.delivered? }
-        "shipped"
-      elsif active_parts.any? { |part| part.processing? || part.shipped? || part.delivered? }
-        "processing"
-      else
-        "confirmed"
+    with_lock do
+      items = order_items.reload.to_a
+      active_items = items.reject do |item|
+        item.rejected? || item.canceled?
       end
 
-    active_items = order_items.where(seller_order: active_parts)
+      new_status =
+        if active_items.empty?
+          "canceled"
+        elsif active_items.all?(&:delivered?)
+          "delivered"
+        elsif active_items.any?(&:delivered?)
+          "partially_delivered"
+        elsif active_items.all? { |item| item.shipped? || item.delivered? }
+          "shipped"
+        elsif active_items.any? { |item| item.processing? || item.shipped? }
+          "processing"
+        else
+          "confirmed"
+        end
 
-    update!(
-      status: new_status,
-      total_amount: active_items.sum(:subtotal),
-      discount_amount: active_items.sum(:discount_amount),
-      final_amount: active_items.sum(:final_amount)
-    )
+      update!(
+        status: new_status,
+        total_amount: active_items.sum(&:subtotal),
+        discount_amount: active_items.sum(&:discount_amount),
+        final_amount: active_items.sum(&:final_amount)
+      )
+    end
   end
 
   private

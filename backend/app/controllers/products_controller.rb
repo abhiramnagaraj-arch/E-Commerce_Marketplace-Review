@@ -2,21 +2,25 @@ class ProductsController < ApplicationController
   before_action :set_product, only: :show
 
   def index
-    if params[:category_id].present?
-      @category = Category.find(params[:category_id])
-      @products = @category.products.available.order(created_at: :desc)
-    else
-      @products = Product.available.includes(:category).order(created_at: :desc)
-    end
     @categories = Category.order(:name)
+    @category = Category.find(params[:category_id]) if params[:category_id].present?
+
+    products = Product.available.includes(:category)
+    products = products.where(category: @category) if @category
+    products = products.order(created_at: :desc)
+
+    @products, @page, @total_pages, = paginate(products, per_page: 8)
+
+    load_product_offers(@products, category: @category)
   end
 
   def show
+    @product_offers = Promotion.live.for_product(@product)
   end
 
   private
 
   def set_product
-    @product = Product.available.find(params[:id])
+    @product = Product.available.includes(:category, :seller).find(params[:id])
   end
 end

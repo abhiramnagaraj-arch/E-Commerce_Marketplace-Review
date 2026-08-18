@@ -7,7 +7,10 @@ class CategoriesController < ApplicationController
   end
 
   def show
-    @products = @category.products.available.includes(:seller).order(created_at: :desc)
+    products = @category.products.available.order(created_at: :desc)
+    @products, @page, @total_pages, @product_count = paginate(products, per_page: 8)
+
+    load_product_offers(@products, category: @category)
   end
 
   private

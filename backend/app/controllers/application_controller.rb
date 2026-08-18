@@ -2,16 +2,12 @@ class ApplicationController < ActionController::Base
   helper_method :current_cart, :cart_item_count
   before_action :configure_permitted_parameters, if: :devise_controller?
 
-  rescue_from CanCan::AccessDenied do |exception|
-    redirect_to root_path, alert: exception.message
-  end
-
   protected
 
   def configure_permitted_parameters
     devise_parameter_sanitizer.permit(:sign_up) do |params|
-      permitted = params.permit(:name, :email, :password, :password_confirmation, :role)
-      permitted[:role] = "buyer" unless %w[buyer seller].include?(permitted[:role])
+      permitted = params.permit(:name, :email, :password, :password_confirmation)
+      permitted[:role] = %w[buyer seller].include?(params[:role]) ? params[:role] : "buyer"
       permitted
     end
 
@@ -39,15 +35,40 @@ class ApplicationController < ActionController::Base
   end
 
   def current_promotion(items)
-    code = session[:promotion_code]
-    promotion = Promotion.best_for(items, code: code)
-    return promotion if promotion || code.blank?
-
-    session.delete(:promotion_code)
-    Promotion.best_for(items)
+    promotion = Promotion.live.includes(:tiers).find_by(id: session[:promotion_id])
+    promotion if promotion&.fits?(items, current_user)
   end
 
   def cart_item_count
     current_cart&.cart_items&.sum(:quantity) || 0
+  end
+
+  def paginate(collection, per_page:, param: :page)
+    total = collection.count
+    total_pages = (total.to_f / per_page).ceil
+    total_pages = 1 if total_pages.zero?
+
+    page = params[param].to_i
+    page = 1 if page < 1
+    page = total_pages if page > total_pages
+
+    offset = (page - 1) * per_page
+
+    records = if collection.is_a?(Array)
+      collection[offset, per_page] || []
+    else
+      collection.offset(offset).limit(per_page)
+    end
+
+    [ records, page, total_pages, total ]
+  end
+
+  def load_product_offers(products, category: nil)
+    offers = Promotion.live.includes(:seller).for_product_list(products).to_a
+    @sales = offers.select(&:sale?).uniq(&:id)
+    @category_offers = offers.select do |offer|
+      category && offer.category_discount? && offer.category_id == category.id
+    end
+    @product_offers = offers.select(&:product_discount?).group_by(&:product_id)
   end
 end

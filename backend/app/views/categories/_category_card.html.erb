@@ -1,0 +1,10 @@
+<div class="product-card">
+  <div class="product-info">
+    <%= link_to category.name, destination, class: "product-title" %>
+    <p class="product-description"><%= category.description %></p>
+    <div class="product-footer">
+      <span class="muted"><%= product_count %> products</span>
+      <%= link_to "View", destination, class: "btn btn-secondary btn-sm" %>
+    </div>
+  </div>
+</div>

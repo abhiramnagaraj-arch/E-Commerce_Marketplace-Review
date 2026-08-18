@@ -6,7 +6,7 @@
   <%= link_to "Continue shopping", products_path, class: "btn btn-secondary" %>
 </div>
 
-<% if @cart.cart_items.any? %>
+<% if @all_cart_items.any? %>
   <div class="cart-layout">
     <div class="cart-container">
       <% @cart_items.each do |item| %>
@@ -17,41 +17,92 @@
           </div>
 
           <div class="quantity-controls">
-            <%= button_to "−", decrement_item_buyer_cart_path(id: item.id), method: :patch, class: "quantity-button" %>
+            <%= button_to "−", decrement_item_buyer_cart_path(id: item.id), method: :patch, class: "quantity-button", data: { turbo: false } %>
             <strong><%= item.quantity %></strong>
-            <%= button_to "+", increment_item_buyer_cart_path(id: item.id), method: :patch, class: "quantity-button" %>
+            <%= button_to "+", increment_item_buyer_cart_path(id: item.id), method: :patch, class: "quantity-button", data: { turbo: false } %>
           </div>
 
-          <strong>₹<%= number_with_precision(@line_totals[item.id], precision: 2) %></strong>
+          <strong>₹<%= number_with_precision(item.total_price, precision: 2) %></strong>
           <%= button_to "Remove", remove_item_buyer_cart_path(id: item.id), method: :delete, class: "btn btn-danger btn-sm" %>
         </div>
       <% end %>
 
-      <div class="promotion-section">
-        <% if @promotion %>
-          <span><strong><%= @promotion.name %></strong> applied</span>
-          <% if @promotion.coupon? %>
-            <%= button_to "Remove", remove_promotion_buyer_cart_path, method: :delete, class: "btn btn-secondary btn-sm" %>
-          <% end %>
-        <% end %>
+      <%= render "shared/pagination", page: @items_page, total_pages: @items_total_pages, param: :items_page %>
 
-        <% unless @promotion&.coupon? %>
-          <%= form_with url: apply_promotion_buyer_cart_path, class: "promotion-box" do |form| %>
-            <%= form.text_field :promotion_code, placeholder: "Promotion code", class: "form-control" %>
-            <%= form.submit "Apply", class: "btn btn-secondary" %>
-          <% end %>
+      <div class="promotion-section">
+        <h2>Available Offers</h2>
+
+        <% @offers.each do |info| %>
+          <% offer = info[:offer] %>
+
+          <div class="offer-card <%= "picked" if @picked_id == offer.id %>">
+            <div>
+              <strong><%= offer.name %></strong>
+              <% if offer.code.present? %>
+                <span class="offer-code"><%= offer.code %></span>
+              <% end %>
+              <% if @recommended_id == offer.id %>
+                <span class="recommended">Recommended</span>
+              <% end %>
+
+              <% if info[:used] %>
+                <p class="muted">You have already used this coupon.</p>
+              <% elsif info[:level] %>
+                <p>
+                  <%= info[:level].discount_percent %>% off ·
+                  You save ₹<%= number_with_precision(info[:saving], precision: 2) %>
+                </p>
+
+                <% if info[:next] %>
+                  <p class="muted">
+                    <% if offer.product_discount? %>
+                      Add <%= info[:left].to_i %> more qualifying items
+                    <% else %>
+                      Spend ₹<%= number_with_precision(info[:left], precision: 2) %> more
+                    <% end %>
+                    to unlock <%= info[:next].discount_percent %>% off.
+                  </p>
+                <% end %>
+              <% elsif info[:next] %>
+                <p class="muted">
+                  <% if offer.product_discount? %>
+                    Add <%= info[:left].to_i %> qualifying items
+                  <% else %>
+                    Spend ₹<%= number_with_precision(info[:left], precision: 2) %>
+                  <% end %>
+                  to unlock <%= info[:next].discount_percent %>% off.
+                </p>
+              <% else %>
+                <p class="muted">This offer is currently unavailable.</p>
+              <% end %>
+            </div>
+
+            <% if info[:used] %>
+              <span class="offer-state">Already used</span>
+            <% elsif info[:level] %>
+              <% if @picked_id == offer.id %>
+                <span class="offer-state selected">Selected</span>
+              <% else %>
+                <%= button_to "Select",
+                              pick_offer_buyer_cart_path(promotion_id: offer.id),
+                              class: "btn btn-primary btn-sm" %>
+              <% end %>
+            <% else %>
+              <span class="offer-state">Not unlocked</span>
+            <% end %>
+          </div>
         <% end %>
       </div>
     </div>
 
     <div class="cart-container summary-panel">
-      <h2>Order Summary</h2>
+      <h2>Cart Total</h2>
       <div class="summary-row">
         <span>Items (<%= @summary[:item_count] %>)</span>
         <span>₹<%= number_with_precision(@summary[:subtotal], precision: 2) %></span>
       </div>
 
-      <% if @summary[:discounted] %>
+      <% if @summary[:discount].positive? %>
         <div class="summary-row discount-text">
           <span><%= @summary[:promotion].name %></span>
           <span>− ₹<%= number_with_precision(@summary[:discount], precision: 2) %></span>

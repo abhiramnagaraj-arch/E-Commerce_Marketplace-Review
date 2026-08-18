@@ -13,9 +13,12 @@
         <div>
           <strong><%= promotion.name %></strong>
           <p class="muted">
-            <%= promotion.kind.titleize %> ·
-            <%= promotion.discount_percent %>% off ·
+            <%= promotion.sale? ? "Store Sale" : promotion.kind.titleize %> ·
+            <%= promotion.product_discount? ? "Quantity" : "Amount" %> ladder ·
             <%= promotion.active? ? "Active" : "Inactive" %>
+          </p>
+          <p class="muted">
+            <%= promotion.tiers.map { |tier| "#{tier.minimum_value} → #{tier.discount_percent}%" }.join(" · ") %>
           </p>
           <% if promotion.code.present? %>
             <p class="muted">Code: <%= promotion.code %></p>
@@ -23,6 +26,8 @@
             <p class="muted">Product: <%= promotion.product.title %></p>
           <% elsif promotion.category %>
             <p class="muted">Category: <%= promotion.category.name %></p>
+          <% elsif promotion.seller %>
+            <p class="muted">Seller / brand: <%= promotion.seller.name %></p>
           <% end %>
           <% if promotion.starts_at || promotion.ends_at %>
             <p class="muted">

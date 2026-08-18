@@ -345,41 +345,10 @@ body {
   box-shadow: var(--shadow-sm);
 }
 
-.cart-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 2rem;
-}
-
-.cart-table th {
-  text-align: left;
-  padding: 1rem;
-  border-bottom: 2px solid var(--border);
-  color: var(--text-muted);
-  font-weight: 600;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-}
-
-.cart-table td {
-  padding: 1.25rem 1rem;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-}
-
 .quantity-controls {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.quantity-input {
-  width: 60px;
-  padding: 0.4rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  text-align: center;
-  font-weight: 600;
 }
 
 .quantity-button {
@@ -413,11 +382,134 @@ body {
 }
 
 .promotion-section {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
   padding-top: 1.5rem;
+}
+
+.promotion-section h2 {
+  margin-bottom: 1rem;
+}
+
+.offer-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  margin-top: 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.offer-card.picked {
+  border-color: var(--success);
+}
+
+.offer-code,
+.recommended {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 50px;
+  background: var(--background);
+  color: var(--primary);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.recommended {
+  background: var(--success);
+  color: white;
+}
+
+.offer-state {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.offer-state.selected {
+  color: var(--success);
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.pagination a {
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+
+.pagination a.active {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+}
+
+.product-offer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  padding: 0.7rem 0.8rem;
+  margin-bottom: 1rem;
+  border-radius: var(--radius-sm);
+  background: #ecfdf5;
+  color: #166534;
+  font-size: 0.85rem;
+}
+
+.product-offer span {
+  color: #15803d;
+}
+
+.promotion-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  border-radius: var(--radius-md);
+}
+
+.promotion-banner p {
+  margin-top: 0.25rem;
+}
+
+.promotion-banner > span {
+  padding: 0.3rem 0.75rem;
+  border-radius: 50px;
+  background: rgba(255, 255, 255, 0.8);
+  font-size: 0.8rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sale-banner {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.category-offer-banner {
+  background: #ecfdf5;
+  color: #166534;
+}
+
+.tier-row {
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+.tier-remove {
+  align-self: center;
 }
 
 .summary-panel {
@@ -456,14 +548,6 @@ body {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-}
-
-/* Summary Box */
-.summary-card {
-  background: var(--primary-light);
-  border-radius: var(--radius-md);
-  padding: 1.5rem;
-  margin-top: 1.5rem;
 }
 
 .summary-row {
@@ -597,10 +681,6 @@ body {
   color: var(--text-muted);
 }
 
-.align-right {
-  text-align: right;
-}
-
 .empty-state {
   padding: 2rem 0;
   color: var(--text-muted);
@@ -619,12 +699,6 @@ body {
 
 .detail-list dd {
   margin-top: 0.2rem;
-}
-
-.promotion-box {
-  display: flex;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
 }
 
 /* Footer */
