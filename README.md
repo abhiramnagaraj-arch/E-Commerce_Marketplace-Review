@@ -1,111 +1,197 @@
-# ⚡ Rediff Store — Ruby on Rails MVC E-Commerce Demo
+# Rediff Store
 
-A complete, professional **Ruby on Rails 8 MVC E-Commerce Application** built for an internship demonstration. This repository contains the full backend Rails MVC application along with sample seed data and a responsive Vanilla CSS glassmorphism UI.
+Rediff Store is a multi-vendor e-commerce marketplace built as a Ruby on Rails monolith. It provides separate buyer, seller, and administrator workflows, with server-rendered ERB views, Hotwire-powered cart updates, PostgreSQL persistence, and a responsive custom CSS interface.
 
----
+The Rails application lives in [`backend/`](backend/). The files in [`frontend/`](frontend/) are reference notes; there is no separate frontend service to install or run.
 
-## 🚀 Quick Start Guide (For Team & Friends)
+## Current features
 
-Follow these exact steps to clone, configure, and run this E-Commerce store on your local machine in under 5 minutes.
+### Buyers
 
-### 📋 Prerequisites
-- **Ruby** (version 3.2+ or 4.0+)
-- **PostgreSQL** installed and running on your machine
-- **Bundler** (`gem install bundler`)
-- **Git**
+- Browse active products and categories without signing in
+- Register or sign in with Devise
+- Add products to a stock-aware cart and update quantities without a full-page reload
+- Compare eligible promotions and select one offer per order
+- Check out with customer and delivery details
+- View order history and seller-level fulfillment progress
+- Cancel an entire order or individual items before shipment; canceled stock is restored
 
----
+### Sellers
 
-### Step 1: Clone the Repository
-Open your terminal (PowerShell, Command Prompt, or Bash) and run:
+- Register a seller account and access a role-protected dashboard
+- Create, edit, view, and archive their own products
+- Manage price, stock, brand, category, description, and JSON-backed specifications
+- View only their portion of marketplace orders
+- Move items through `confirmed -> processing -> shipped -> delivered`
+- Reject eligible items with a reason; rejected stock is restored
+
+### Administrators
+
+- View marketplace totals from an admin dashboard
+- Create, edit, and delete categories (categories with products are protected)
+- View all orders and seller-level order breakdowns
+- Create, edit, activate, and deactivate tiered promotions
+- Target promotions at a coupon, product, category, or seller storefront
+
+### Marketplace rules
+
+- Product stock is locked and checked during checkout to prevent overselling
+- Orders containing multiple sellers are split into `SellerOrder` records
+- Item-level status changes roll up to seller-order and overall-order statuses
+- Promotion discounts are stored on each order item for accurate seller totals
+- Coupon use is limited to once per buyer
+- Product deletion is implemented as archiving so historical order data remains intact
+
+## Tech stack
+
+| Area | Technology |
+| --- | --- |
+| Application | Ruby 3.2.3, Rails 8.1.3 |
+| Database | PostgreSQL |
+| Authentication | Devise |
+| State transitions | AASM |
+| UI | ERB, Propshaft, custom CSS |
+| Interactivity | Hotwire (Turbo), Importmap |
+| Server and jobs | Puma, Solid Queue, Solid Cache, Solid Cable |
+| Quality tooling | Minitest, RuboCop, Brakeman, Bundler Audit |
+| Deployment | Docker, Thruster, Kamal configuration |
+
+## Getting started
+
+### Prerequisites
+
+- Git
+- Ruby `3.2.3` (the version in [`backend/.ruby-version`](backend/.ruby-version))
+- Bundler `4.0.16`
+- PostgreSQL running locally
+- PostgreSQL development headers if the `pg` gem needs to be compiled (`libpq-dev` on Debian/Ubuntu)
+
+### 1. Clone and enter the Rails application
 
 ```bash
-git clone https://github.com/sanjay8523/abhicompany.git
-cd abhicompany/backend/ecommerce
+git clone https://github.com/abhiramnagaraj-arch/E-Commerce_Marketplace-Review.git
+cd E-Commerce_Marketplace-Review/backend
 ```
 
----
+All remaining commands in this README run from `backend/`.
 
-### Step 2: Configure Your PostgreSQL Password
-Before running the database commands, you need to tell Rails your local PostgreSQL password.
+### 2. Configure PostgreSQL
 
-1. Open `backend/ecommerce/config/database.yml` in your code editor.
-2. Under the `default:` section, locate the `password:` field:
-   ```yaml
-   default: &default
-     adapter: postgresql
-     encoding: unicode
-     username: postgres
-     password: postgresql123 # <-- CHANGE THIS to your local PostgreSQL password
-     host: localhost
-     pool: <%= ENV.fetch("RAILS_MAX_THREADS") { 5 } %>
-   ```
-3. Replace `YOUR_POSTGRES_PASSWORD_HERE` with the password you set when installing PostgreSQL (for example: `postgres`, `root`, `1234`, or leave empty if no password is set).
-4. Save the file.
+The development configuration in [`backend/config/database.yml`](backend/config/database.yml) currently expects:
 
----
+```yaml
+username: postgres
+password: postgresql123
+host: localhost
+port: 5432
+```
 
-### Step 3: Install Gems & Dependencies
-Inside the `backend/ecommerce` directory, run:
+Update those values to match your local PostgreSQL installation. The configured databases are `ecommerce_development`, `ecommerce_test`, and `ecommerce_production`.
+
+You can also provide a connection URL for an individual command, for example:
+
+```bash
+DATABASE_URL=postgres://postgres:your_password@localhost:5432/ecommerce_development bin/rails db:prepare
+```
+
+### 3. Install dependencies and prepare data
 
 ```bash
 bundle install
+bin/rails db:prepare
+bin/rails db:seed
 ```
 
----
+`db:prepare` creates the database when needed and loads the current schema. The seed is designed to be rerunnable and does not delete existing users, products, or orders.
 
-### Step 4: Create Database, Run Migrations, & Seed Sample Data
-Run the following Rails database commands to automatically create the PostgreSQL tables and populate them with sample products, categories, and promo coupons:
+### 4. Start the application
 
 ```bash
-rails db:create
-rails db:migrate
-rails db:seed
+bin/rails server
 ```
 
-> **What `db:seed` generates:**
-> - **3 Categories:** Laptops & Computing, Audio & Headphones, Tech Accessories
-> - **6 Premium Products:** MacBook Air M3, ThinkPad X1 Carbon, Sony XM5 Headphones, AirPods Pro 2, Logitech MX Master 3S, Keychron Q1 Pro
-> - **2 Promo Coupons:** `WELCOME10` (10% off any order) and `MEGA20` (20% off orders above ₹5,000)
+Open [http://localhost:3000](http://localhost:3000). The health endpoint is available at [http://localhost:3000/up](http://localhost:3000/up).
 
----
+## Demo data and accounts
 
-### Step 5: Start the Rails Web Server
-Launch the application server:
+Running `bin/rails db:seed` creates:
+
+- 8 categories
+- 25 products with brands and category-specific specifications
+- 7 active, tiered promotions covering coupons, products, categories, and a seller sale
+- One account for each application role
+
+| Role | Email | Password | Landing page |
+| --- | --- | --- | --- |
+| Buyer | `buyer@example.com` | `password` | `/buyer` |
+| Seller | `seller@example.com` | `password` | `/seller` |
+| Admin | `admin@example.com` | `password` | `/admin` |
+
+These credentials are for local demonstration only.
+
+The seeded `SHOPMORE` coupon has three order-value tiers: 5% from Rs. 2,000, 8% from Rs. 5,000, and 10% from Rs. 10,000. Eligible offers appear automatically in the buyer's cart; buyers choose an unlocked offer rather than entering a coupon code manually.
+
+## Application structure
+
+```text
+backend/
+├── app/
+│   ├── controllers/
+│   │   ├── admin/       # Categories, promotions, and marketplace orders
+│   │   ├── buyer/       # Dashboard, cart, checkout, and order cancellation
+│   │   └── seller/      # Catalog management and order fulfillment
+│   ├── models/          # Commerce rules, associations, and state transitions
+│   ├── views/           # ERB pages and Turbo Stream responses
+│   ├── javascript/      # Importmap entry point and UI behavior
+│   └── assets/          # Custom application styling
+├── config/routes.rb     # Public and role-scoped routes
+├── db/migrate/          # Incremental database changes
+├── db/schema.rb         # Current PostgreSQL schema
+├── db/seeds.rb          # Demo users, catalog, and promotions
+├── Dockerfile           # Production container image
+└── test/                # Minitest locations (currently scaffolded)
+```
+
+The main data flow is:
+
+```text
+User (buyer) -> Cart -> CartItem -> Product <- User (seller)
+     |                                |
+     +-> Order -> SellerOrder -> OrderItem
+           |
+           +-> Promotion -> PromotionTier
+
+Category -> Product
+Category/Product/Seller <- Promotion
+```
+
+For deeper database documentation, see [`backend/DATABASE_ARCHITECTURE_REPORT.md`](backend/DATABASE_ARCHITECTURE_REPORT.md) and [`backend/DATABASE_QUERY_CATALOG.md`](backend/DATABASE_QUERY_CATALOG.md).
+
+## Useful commands
 
 ```bash
-rails server
+# Run the test suite
+bin/rails test
+
+# Run system tests
+bin/rails test:system
+
+# Check code style
+bundle exec rubocop
+
+# Scan application code and dependencies
+bundle exec brakeman --no-pager
+bundle exec bundler-audit
+
+# Inspect routes or reset local demo data
+bin/rails routes
+bin/rails db:reset
 ```
 
-Now open your browser and navigate to:
-👉 **http://localhost:3000**
+The CI template in `backend/.github/workflows/ci.yml` defines linting, security scans, unit tests, and system tests. Because GitHub only discovers workflows from the repository-root `.github/workflows/` directory, it must be moved there before it will run for this repository. Its referenced RuboCop, Brakeman, Bundler Audit, and Importmap binstubs are also absent; use the `bundle exec` commands above for the first three and either add a supported Importmap audit command or remove that CI step. The `test/` directories are scaffolded but do not yet contain project-specific test cases.
 
----
+## Current status
 
-## 🏗️ MVC Architecture & Database Tables
+The core marketplace demonstration is implemented: authentication, role isolation, catalog management, cart and checkout, tiered promotions, multi-seller order splitting, item-level fulfillment, cancellation/rejection handling, pagination, and responsive views are all present.
 
-```
-Categories (id, name, description)
-   │
-   ├──< Products (id, title, description, price, stock, category_id)
-           │
-           ├──< CartItems (id, cart_id, product_id, quantity) >── Carts (id)
-           │
-           └──< OrderItems (id, order_id, product_id, quantity, price) >── Orders
-```
-
-### 📂 Key Directory Locations
-- **Models & Associations:** `app/models/` (`Category.rb`, `Product.rb`, `Cart.rb`, `CartItem.rb`, `Coupon.rb`, `Order.rb`, `OrderItem.rb`)
-- **Controllers:** `app/controllers/` (`ProductsController`, `CategoriesController`, `CartsController`, `OrdersController`)
-- **ERB Views:** `app/views/`
-- **Design System:** `app/assets/stylesheets/application.css`
-- **Database Migrations:** `db/migrate/`
-- **Seed Data:** `db/seeds.rb`
-- **Routes Configuration:** `config/routes.rb`
-
----
-
-## 🎟️ Testing Promo Coupon Codes
-During your demo or testing, try entering these coupon codes in the Shopping Cart (`/cart`):
-- `WELCOME10` — Instantly deducts **10%** from the subtotal.
-- `MEGA20` — Instantly deducts **20%** on orders with a subtotal of ₹5,000 or higher.
+Areas still suitable for production hardening include adding project-specific automated tests, activating and correcting the CI template, moving database secrets fully into environment-managed configuration, configuring real email delivery, adding product image upload/storage, and replacing the placeholder hosts and registry values in [`backend/config/deploy.yml`](backend/config/deploy.yml).
