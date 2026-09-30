@@ -142,4 +142,4 @@ class Promotion < ApplicationRecord
     end
     errors.add(:tiers, "must increase the discount at every level") if repeated
   end
-end
+end     
